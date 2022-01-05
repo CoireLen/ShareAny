@@ -7,6 +7,8 @@
 #include <QtWidgets/qlayout.h>
 #include <QtWidgets/qwidget.h>
 #include <QtWidgets/qfiledialog.h>
+#include <QtWidgets/qlineedit.h>
+#include <QtWidgets/qpushbutton.h>
 #include <QtGui/qevent.h>
 #include <QtWidgets/qmessagebox.h>
 #include <QtCore/qmimedata.h>
@@ -17,7 +19,11 @@
 #include <QtNetwork/qhostinfo.h>
 #include <QtNetwork/QNetworkInterface>
 #include <QtGui/qpainter.h>
+#include <QtCore/qtemporarydir.h>
+#include <QtCore/qjsondocument.h>
+#include <QtCore/qjsonobject.h>
 #include <qrencode.h>
+
 class ShareAnyListWidget :public QListWidget {
 public:
 	ShareAnyListWidget(std::vector<std::pair<QString, QString>> *dataList);
@@ -27,11 +33,29 @@ public:
 	void mouseReleaseEvent(QMouseEvent *e);
 	void deleteAll();
 	std::vector<std::pair<QString, QString>>* dataList = NULL;
+	
 private:
 	void addList(QString,QString);
 	void addItemToList(QString);
+	void addItemfromMimedata(const QMimeData *);
+	QTemporaryDir tempdir;
+	QList<QString> tempimagefiles;
 };
-
+class ShareAnySettingWindow :public QWidget {
+public:
+	ShareAnySettingWindow(QWidget*, std::vector<std::pair<QString, QString>>* data);
+	~ShareAnySettingWindow();
+	void OnApply();
+	QString GetEndpoint();
+private:
+	QGridLayout layout;
+	QLabel endpointlabel;
+	QLineEdit endpointedit;
+	QJsonDocument settingjson;
+	QPushButton apply;
+	std::vector<std::pair<QString, QString>>* dataList;
+	std::thread *webthread;
+};
 class ShareAnyWindow :public QWidget
 {
 public:
@@ -39,12 +63,13 @@ public:
 	~ShareAnyWindow();
 	void OnRemove();
 	void OnShowQRcode();
+	void OnShowSetting();
 	std::vector<std::pair<QString, QString>>* dataList = NULL;
 private:
 	QGridLayout layout;
 	QToolBar toolBar;
 	ShareAnyListWidget *SA_listwidget;
-	
+	ShareAnySettingWindow *SA_Setting;
 };
 
 class FindStringLsit:public QStringList

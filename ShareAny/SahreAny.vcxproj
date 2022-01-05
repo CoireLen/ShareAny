@@ -82,7 +82,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\Lib\vcpkg\installed\x64-windows\include\qt5;$(IncludePath)</IncludePath>
+    <IncludePath>D:\Lib\Wt-4.6.1-msvs2022-Windows-x64-SDK\include;D:\Lib\vcpkg\installed\x64-windows\include\qt5;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Lib\Wt-4.6.1-msvs2022-Windows-x64-SDK\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -139,10 +140,11 @@
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>libcrypto.lib;libhpdf.lib;libssl.lib;wt.lib;wtdbo.lib;wtdbomssqlserver.lib;wtdbomysql.lib;wtdbopostgres.lib;wtdbosqlite3.lib;wthttp.lib;wtisapi.lib;wttest.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

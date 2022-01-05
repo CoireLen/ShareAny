@@ -1,3 +1,4 @@
+#include "web.h"
 #include "gui.h"
 #include <iostream>
 /*
@@ -7,6 +8,7 @@
 - 支持右键添加文本信息
 - url扫码进入
 */
+
 ShareAnyWindow::ShareAnyWindow(QWidget* parent,std::vector<std::pair<QString, QString>>* data) :QWidget(parent)
 {
 	this->dataList = data;
@@ -19,8 +21,12 @@ ShareAnyWindow::ShareAnyWindow(QWidget* parent,std::vector<std::pair<QString, QS
 	static QAction toolButton2(QString("QRcode"));
 	toolBar.addAction(&toolButton2);
 	connect(&toolButton2, &QAction::triggered, this, &ShareAnyWindow::OnShowQRcode);
+	static QAction toolButton3(QString("Setting"));
+	toolBar.addAction(&toolButton3);
+	connect(&toolButton3, &QAction::triggered, this, &ShareAnyWindow::OnShowSetting);
 	layout.addWidget(&toolBar);
 	this->SA_listwidget = new ShareAnyListWidget(dataList);
+	this->SA_Setting = new ShareAnySettingWindow(this,data);
 	layout.addWidget(SA_listwidget);
 	this->show();
 	
@@ -45,10 +51,18 @@ void ShareAnyWindow::OnShowQRcode() {
 	if (ipAddress.isEmpty())
 		ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
 	std::cout << ipAddress.toStdString() << std::endl;
-	new QRcodeWindow(this, "http://"+ipAddress);
+	auto link = "http://" + ipAddress;
+	if (SA_Setting->GetEndpoint() != "80") {
+		link += ":" + SA_Setting->GetEndpoint();
+	}
+	new QRcodeWindow(this, link);
+}
+void ShareAnyWindow::OnShowSetting() {
+	SA_Setting->show();
 }
 ShareAnyWindow::~ShareAnyWindow() {
 	delete SA_listwidget;
+	delete SA_Setting;
 }
 /*
 下面是FindStringList
@@ -92,15 +106,32 @@ void ShareAnyListWidget::deleteAll() {
 		delete this->item(i);
 	}
 	this->clear();
+	for (auto i : tempimagefiles) {
+			QFile::remove(i);
+	}
 }
 ShareAnyListWidget::~ShareAnyListWidget() {
 	deleteAll();
 }
+void ShareAnyListWidget::addItemfromMimedata(const QMimeData *mimedata) {
+	if (mimedata->hasImage()) {
+		QImage img = qvariant_cast<QImage>(mimedata->imageData());
+		auto tempfilepath = tempdir.path() + "/" +QString::number(tempimagefiles.size())+".png";
+		tempimagefiles.push_back(tempfilepath);
+		std::cout << tempfilepath.toStdString() << std::endl;
+		
+		img.save(tempfilepath);
+		addList("image", tempfilepath);
+	}
+	else if (mimedata->hasText()) {
+		this->addItemToList(mimedata->text());
+	}
+}
 void ShareAnyListWidget::mouseReleaseEvent(QMouseEvent* e) {
 	if (e->button() == Qt::RightButton)
 	{
-		auto clip= QGuiApplication::clipboard();
-		this->addItemToList(clip->text());
+		auto e = QGuiApplication::clipboard();
+		addItemfromMimedata(e->mimeData());
 	}
 	else {
 		e->accept();
@@ -110,41 +141,48 @@ void ShareAnyListWidget::dragEnterEvent(QDragEnterEvent *e) {
 	if (e->mimeData()->hasText()) {
 		e->acceptProposedAction();
 	}
+	else if (e->mimeData()->hasImage()) {
+		e->acceptProposedAction();
+	}
 	else {
 		e->accept();
 	}
 }
-void ShareAnyListWidget::addItemToList(QString path) {
-	if (path.startsWith("file:///")) {
-		path.replace("file:///", "");
-		std::cout << path.toStdString() << std::endl;
-		QStringList a = path.split('.');
-		if (FindStringLsit({ "jpg", "png", "gif" }).Find(a.at(a.length() - 1))) {
-			this->addList("image", path);
-		}
-		else if (FindStringLsit({ "mp3", "aac", "flac" }).Find(a.at(a.length() - 1))) {
-			this->addList("audio", path);
-		}
-		else if (FindStringLsit({ "mp4" }).Find(a.at(a.length() - 1))) {
-			this->addList("video", path);
+void ShareAnyListWidget::addItemToList(QString paths) {
+	QStringList filepaths = paths.split('\n');
+	for (QString path : filepaths) {
+		if (path.startsWith("file:///")) {
+			path.replace("file:///", "");
+			QStringList a = path.split('.');
+			if (FindStringLsit({ "jpg", "png", "gif" }).Find(a.at(a.length() - 1))) {
+				this->addList("image", path);
+			}
+			else if (FindStringLsit({ "mp3", "aac", "flac" }).Find(a.at(a.length() - 1))) {
+				this->addList("audio", path);
+			}
+			else if (FindStringLsit({ "mp4" }).Find(a.at(a.length() - 1))) {
+				this->addList("video", path);
+			}
+			else {
+				this->addList("file", path);
+			}
 		}
 		else {
-			this->addList("file", path);
+			if (path!="")
+				this->addList("text", path);
 		}
-	}
-	else {
-		this->addList("text", path);
 	}
 }
 void ShareAnyListWidget::dropEvent(QDropEvent *e) 
 {
-	if (e->mimeData()->hasText()) {
-		if (e->mimeData()->text().startsWith("file:///")) {
-			QStringList filepaths = e->mimeData()->text().split('\n');
-			for (QString path : filepaths) {
-				addItemToList(path);
-			}
-		}
+	if (e->mimeData()->hasImage()) {
+		addItemfromMimedata(e->mimeData());
+	}
+	else if (e->mimeData()->hasUrls()) {
+		addItemfromMimedata(e->mimeData());
+	}
+	else if (e->mimeData()->hasText()) {
+		addItemfromMimedata(e->mimeData());
 	}
 	else {
 		e->accept();
@@ -203,4 +241,83 @@ void QRcodeWindow::GenerateQRcode(QString tempstr)
 		}
 	}
 	this->qrcodeimg = QPixmap::fromImage(mainimg);
+}
+void strcpyns(char* des, std::string src) {
+	for (int i = 0; i < src.size(); i++) {
+		*(des + i) = src[i];
+	}
+}
+void Run_Web(std::vector<std::pair<QString, QString>>* dataList, QString endpoint) {
+	static std::vector<std::string> startData = {"", "--docroot",".","--http-address","0.0.0.0","--http-port","80","--resources-dir=./resources"};
+	char** a = (char **)malloc(startData.size()*sizeof(char*));
+	size_t size1 = endpoint.toStdString().size() * sizeof(char);
+	char * port= (char*)malloc( size1+1);
+	std::cout <<"Endpoint:"<< endpoint.toStdString() << std::endl;
+	strcpyns(port,endpoint.toStdString());
+	for (int i = 0; i < startData.size();i++) {
+		if (startData[i].starts_with("80")) {
+			*(a + i) = port;
+		}
+		else {
+			*(a + i) = (char*)startData[i].c_str();
+		}
+		puts(*(a+i));
+	}
+	Wt::WRun(7, a, [dataList](const Wt::WEnvironment& env) {
+		return std::make_unique<ShareAnyApplication>(env, dataList);
+		});
+	free(a);
+	free(port);
+}
+ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::pair<QString, QString>>* data) {
+	this->setWindowTitle("Setting");
+	this->setLayout(&layout);
+	endpointlabel.setText("Prot:");
+	endpointlabel.setAlignment(Qt::AlignRight);
+	layout.addWidget(&endpointlabel, 0, 0, 1, 1);
+	endpointedit.setText("80");
+	layout.addWidget(&endpointedit, 0, 1, 1, 1);
+	apply.setText("Apply");
+	connect(&apply, &QPushButton::clicked, this, &ShareAnySettingWindow::OnApply);
+	layout.addWidget(&apply);
+	//这里放读取setting.json的代码
+	QFile json("./setting.json");
+	json.open(QIODevice::ReadWrite);
+	auto jsfiledata = json.readAll();
+	std::cout << "JsonFileRead:" << jsfiledata.toStdString() << std::endl;
+	QJsonParseError error;
+	settingjson=QJsonDocument::fromJson(QString(jsfiledata).toUtf8(), &error);
+	json.close();
+	if (error.error == QJsonParseError::NoError) {
+		if (settingjson.isObject()) {
+			auto v = settingjson.object().take("endpoint");
+			if (v.isString()) {
+				endpointedit.setText(v.toString());
+			}
+		}
+	}
+	dataList = data;
+	webthread = new std::thread(Run_Web, data, endpointedit.text());
+}
+ShareAnySettingWindow::~ShareAnySettingWindow() {
+	webthread->detach();
+}
+void ShareAnySettingWindow::OnApply() {
+	webthread->detach();
+	webthread = new std::thread(Run_Web, dataList, endpointedit.text());
+	//将数据写入setting.json
+	QJsonObject obj;
+	//添加数据
+	obj.insert("endpoint", endpointedit.text());//端口
+	//
+	auto jsdoc = QJsonDocument(obj);
+	QFile json("./setting.json");
+	json.open(QIODevice::WriteOnly);
+	auto array = jsdoc.toJson();
+	std::cout << "JsonArray:" << array.toStdString() << std::endl;
+	json.write(array);
+	json.close();
+}
+QString ShareAnySettingWindow::GetEndpoint() {
+	return this->endpointedit.text();
 }

@@ -4,13 +4,14 @@
 建立web服务
 展示页面
 */
-
 ShareAnyApplication::ShareAnyApplication(const Wt::WEnvironment& env, std::vector<std::pair<QString, QString>>* dataList) : WApplication(env)
 {
 	this->dataList = dataList;
 	Wt::WApplication* app = new Wt::WApplication(env);
 	app->setTitle("ShareAnything");
-	app->setCssTheme("polished");
+	setTheme(std::make_shared<Wt::WBootstrap5Theme>());
+	//setCssTheme("polished");
+	//<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
 	root()->setContentAlignment(Wt::AlignmentFlag::Center);
 	//这里放个上传区D:\Program\ShareAny\upload
 	//以下主体动态代码
@@ -18,13 +19,19 @@ ShareAnyApplication::ShareAnyApplication(const Wt::WEnvironment& env, std::vecto
 	for (auto i : *dataList) {
 		std::cout << i.second.toStdString() << std::endl;
 		if (i.first == "text") {
-			//auto button1 = root()->addNew<Wt::WPushButton>(i.second.toStdString());
-			//button1->addStyleClass("centered-example");
-			//std::string jslot1("var e=event||window.event;if (e.clipboardData.setData(\"text\",'"+i.second.toStdString()+"')){alert(\"Copyed!\")");
-			//button1->clicked().connect(jslot1);
-			auto input1 = root()->addNew<Wt::WLineEdit>(i.second.toStdString());
+			
+			auto container = root()->addNew<Wt::WContainerWidget>();
+			container->setMaximumSize(Wt::WLength("100%"), Wt::WLength("100%"));
+			auto hbox = container->setLayout(std::make_unique<Wt::WHBoxLayout>());
+			auto input1 = std::make_unique<Wt::WTextArea>(i.second.toStdString());
+			input1->setMaximumSize(Wt::WLength("70%"), Wt::WLength(""));
 			static Wt::JSlot js= Wt::JSlot("document.getElementById('" + input1->id() + "').select();execCommand('Copy');alert('Copyed');");
-			input1->clicked().connect(js);
+			hbox->addWidget(std::move(input1));
+			auto pushbutton = std::make_unique<Wt::WPushButton>("COPY");
+			pushbutton->clicked().connect(js);
+			pushbutton->setMaximumSize(Wt::WLength("30%"), Wt::WLength(""));
+			hbox->addWidget(std::move(pushbutton));
+			root()->addNew<Wt::WBreak>();
 		}
 		else if (i.first == "image") {
 			auto textResource = std::make_shared<Wt::WFileResource>(coder->fromUnicode(i.second).toStdString());

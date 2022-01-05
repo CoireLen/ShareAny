@@ -4,6 +4,7 @@
 #include <Wt/WLineEdit.h>
 #include <Wt/WPushButton.h>
 #include <Wt/WText.h>
+#include <Wt/WTextArea.h>
 #include <Wt/WFileResource.h>
 #include <Wt/WResource.h>
 #include <Wt/WLink.h>
@@ -14,6 +15,7 @@
 #include <Wt/WHBoxLayout.h>
 #include <Wt/WVideo.h>
 #include <Wt/WJavaScript.h>
+#include <Wt/WBootstrap5Theme.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qtextcodec.h>
 
