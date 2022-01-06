@@ -6,6 +6,9 @@
 */
 ShareAnyApplication::ShareAnyApplication(const Wt::WEnvironment& env, std::vector<std::pair<QString, QString>>* dataList) : WApplication(env)
 {
+	instance()->internalPathChanged()
+		.connect(this, &ShareAnyApplication::RandPage);
+	//internalPathChanged().connect(this,&ShareAnyApplication::RandPage);
 	this->dataList = dataList;
 	Wt::WApplication* app = new Wt::WApplication(env);
 	app->setTitle("ShareAnything");
@@ -102,3 +105,6 @@ ShareAnyApplication::ShareAnyApplication(const Wt::WEnvironment& env, std::vecto
 }
 
 //以下测试
+void ShareAnyApplication::RandPage(const std::string& internalPath) {
+	std::cout << "InternalPath:" << internalPath << std::endl;
+}

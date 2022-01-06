@@ -55,6 +55,9 @@ void ShareAnyWindow::OnShowQRcode() {
 	if (SA_Setting->GetEndpoint() != "80") {
 		link += ":" + SA_Setting->GetEndpoint();
 	}
+	if (SA_Setting->GetEntryPath() != "") {
+		link +="/" + SA_Setting->GetEntryPath();
+	}
 	new QRcodeWindow(this, link);
 }
 void ShareAnyWindow::OnShowSetting() {
@@ -208,7 +211,13 @@ QRcodeWindow::QRcodeWindow(QWidget* parent,QString str) {
 	this->qrstr.setText(str);
 	this->layout.addWidget(&this->qrlabel);
 	this->qrlabel.setPixmap(this->qrcodeimg);
+	connect(&this->qrstr, &QPushButton::clicked, this, &QRcodeWindow::SetClipboard);
+	//connect(&toolButton3, &QAction::triggered, this, &ShareAnyWindow::OnShowSetting);
 	this->show();
+}
+void QRcodeWindow::SetClipboard() {
+	QGuiApplication::clipboard()->setText(qrstr.text());
+	
 }
 void QRcodeWindow::GenerateQRcode(QString tempstr)
 {
@@ -247,12 +256,63 @@ void strcpyns(char* des, std::string src) {
 		*(des + i) = src[i];
 	}
 }
-void Run_Web(std::vector<std::pair<QString, QString>>* dataList, QString endpoint) {
+//std::unique_ptr<Wt::WApplication> createApplication(const Wt::WEnvironment& env, std::vector<std::pair<QString, QString>>* dataList)
+//{
+//	//auto app = std::make_unique<Wt::WApplication>(env);
+//	auto app = std::make_unique<ShareAnyApplication>(env, dataList);
+//	//app->root()->addWidget(std::make_unique<ShareAnyApplication>(env,dataList));
+//
+//	return app;
+//}
+WtThread::WtThread(std::vector<std::pair<QString, QString>>* a, QString b ,std::string c)
+{
+	this->setData(a, b, c);
+}
+void WtThread::setData(std::vector<std::pair<QString, QString>>* a, QString b, std::string c) {
+	datalist = a;
+	endpoint = b;
+	path = c;
+}
+void WtThread::serverstop() {
+	server->stop();
+}
+void WtThread::run()
+{
+	auto dataList = this->datalist;
+	static std::vector<std::string> startData = { "", "--docroot",".","--http-address","0.0.0.0","--http-port","80","--resources-dir=./resources" };
+	char** a = (char**)malloc(startData.size() * sizeof(char*));
+	size_t size1 = endpoint.toStdString().size() * sizeof(char);
+	char* port = (char*)calloc(endpoint.toStdString().size()+1,sizeof(char));
+	std::cout << "Endpoint:" << endpoint.toStdString() << std::endl;
+	std::cout << "EntryPath:" << path << std::endl;
+	strcpyns(port, endpoint.toStdString());
+	for (int i = 0; i < startData.size(); i++) {
+		if (startData[i].starts_with("80")) {
+			*(a + i) = port;
+		}
+		else {
+			*(a + i) = (char*)startData[i].c_str();
+		}
+		puts(*(a + i));
+	}
+	server=new Wt::WServer(7, a, WTHTTP_CONFIGURATION);
+	server->addEntryPoint(Wt::EntryPointType::Application,
+		[dataList](const Wt::WEnvironment& env) {
+			return std::make_unique<ShareAnyApplication>(env, dataList); },
+		path,
+				std::string(""));
+	server->run();
+	free(a);
+	free(port);
+}
+/*//废弃的代码
+void Run_Web(std::vector<std::pair<QString, QString>>* dataList, QString endpoint,const std::string &path) {
 	static std::vector<std::string> startData = {"", "--docroot",".","--http-address","0.0.0.0","--http-port","80","--resources-dir=./resources"};
 	char** a = (char **)malloc(startData.size()*sizeof(char*));
 	size_t size1 = endpoint.toStdString().size() * sizeof(char);
 	char * port= (char*)malloc( size1+1);
-	std::cout <<"Endpoint:"<< endpoint.toStdString() << std::endl;
+	std::cout << "Endpoint:" << endpoint.toStdString() << std::endl;
+	std::cout << "EntryPath:" << path << std::endl;
 	strcpyns(port,endpoint.toStdString());
 	for (int i = 0; i < startData.size();i++) {
 		if (startData[i].starts_with("80")) {
@@ -263,11 +323,40 @@ void Run_Web(std::vector<std::pair<QString, QString>>* dataList, QString endpoin
 		}
 		puts(*(a+i));
 	}
-	Wt::WRun(7, a, [dataList](const Wt::WEnvironment& env) {
-		return std::make_unique<ShareAnyApplication>(env, dataList);
-		});
+	Wt::WServer server(7, a, WTHTTP_CONFIGURATION);
+	server.addEntryPoint(Wt::EntryPointType::Application,
+		[dataList](const Wt::WEnvironment& env) {
+			return std::make_unique<ShareAnyApplication>(env, dataList); },
+		path, 
+		std::string(""));
+	//server.addEntryPoint(EntryPointType::Application, createApplication);
+	//Wt::WRun(7, a, [dataList](const Wt::WEnvironment& env) {
+	//return std::make_unique<ShareAnyApplication>(env, dataList);
+	//});
+	server.run();
 	free(a);
 	free(port);
+}*/
+QString getRandomString(int length)
+{
+	//qsrand(QDateTime::currentMSecsSinceEpoch());//为随机值设定一个seed
+
+	QRandomGenerator qrand(QDateTime::currentMSecsSinceEpoch());
+	const char chrs[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	int chrs_size = sizeof(chrs);
+
+	char* ch = new char[length + 1];
+	memset(ch, 0, length + 1);
+	int randomx = 0;
+	for (int i = 0; i < length; ++i)
+	{
+		randomx = qrand.bounded(chrs_size-1);
+		ch[i] = chrs[randomx];
+	}
+
+	QString ret(ch);
+	delete[] ch;
+	return ret;
 }
 ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::pair<QString, QString>>* data) {
 	this->setWindowTitle("Setting");
@@ -278,6 +367,8 @@ ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::p
 	endpointedit.setText("80");
 	layout.addWidget(&endpointedit, 0, 1, 1, 1);
 	apply.setText("Apply");
+	entrycheck.setText("Use RandLink");
+	layout.addWidget(&entrycheck,1,0,1,2);
 	connect(&apply, &QPushButton::clicked, this, &ShareAnySettingWindow::OnApply);
 	layout.addWidget(&apply);
 	//这里放读取setting.json的代码
@@ -290,25 +381,43 @@ ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::p
 	json.close();
 	if (error.error == QJsonParseError::NoError) {
 		if (settingjson.isObject()) {
-			auto v = settingjson.object().take("endpoint");
-			if (v.isString()) {
-				endpointedit.setText(v.toString());
+			auto v1 = settingjson.object().take("endpoint");
+			if (v1.isString()) {
+				endpointedit.setText(v1.toString());
+			}
+			auto v2 = settingjson.object().take("entrypath");
+			if (v2.isBool()) {
+				if (v2.toBool() == true) {
+					this->entrycheck.setCheckState(Qt::CheckState::Checked);
+					entrypath = getRandomString(8);
+				}
 			}
 		}
 	}
 	dataList = data;
-	webthread = new std::thread(Run_Web, data, endpointedit.text());
+	webthread = new WtThread(data, endpointedit.text(),entrypath.toStdString());
+	webthread->start();
 }
 ShareAnySettingWindow::~ShareAnySettingWindow() {
-	webthread->detach();
+	webthread->serverstop();
+	webthread->quit();
 }
 void ShareAnySettingWindow::OnApply() {
-	webthread->detach();
-	webthread = new std::thread(Run_Web, dataList, endpointedit.text());
+	webthread->serverstop();
+	webthread->quit();
+	if (entrycheck.checkState() == Qt::CheckState::Checked) {
+		entrypath = getRandomString(8);
+	}
+	else {
+		entrypath = "";
+	}
+	webthread = new WtThread(this->dataList, endpointedit.text(), entrypath.toStdString());
+	webthread->start();
 	//将数据写入setting.json
 	QJsonObject obj;
 	//添加数据
 	obj.insert("endpoint", endpointedit.text());//端口
+	obj.insert("entrypath", entrycheck.checkState()== Qt::CheckState::Checked);//启用随机链接
 	//
 	auto jsdoc = QJsonDocument(obj);
 	QFile json("./setting.json");
@@ -321,3 +430,7 @@ void ShareAnySettingWindow::OnApply() {
 QString ShareAnySettingWindow::GetEndpoint() {
 	return this->endpointedit.text();
 }
+QString ShareAnySettingWindow::GetEntryPath() {
+	return this->entrypath;
+}
+

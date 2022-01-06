@@ -4,14 +4,17 @@
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/qtoolbar.h>
 #include <QtCore/qtextcodec.h>
+#include <QtCore/qthread.h>
 #include <QtWidgets/qlayout.h>
 #include <QtWidgets/qwidget.h>
 #include <QtWidgets/qfiledialog.h>
 #include <QtWidgets/qlineedit.h>
 #include <QtWidgets/qpushbutton.h>
+#include <QtWidgets/qcheckbox.h>
 #include <QtGui/qevent.h>
 #include <QtWidgets/qmessagebox.h>
 #include <QtCore/qmimedata.h>
+#include <QtCore/qrandom.h>
 #include <QtGui/QDropEvent>
 #include <QtGui/qclipboard.h>
 #include <QtWidgets/qlabel.h>
@@ -23,6 +26,20 @@
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qjsonobject.h>
 #include <qrencode.h>
+
+class WtThread :public QThread
+{
+public:
+	WtThread(std::vector<std::pair<QString, QString>>* dataList, QString endpoint, std::string path);
+	void setData(std::vector<std::pair<QString, QString>>* dataList, QString endpoint, std::string path);
+	void run();
+	void serverstop();
+private:
+	std::vector<std::pair<QString, QString>>* datalist;
+	QString endpoint;
+	std::string path;
+	Wt::WServer* server;
+};
 
 class ShareAnyListWidget :public QListWidget {
 public:
@@ -47,14 +64,17 @@ public:
 	~ShareAnySettingWindow();
 	void OnApply();
 	QString GetEndpoint();
+	QString GetEntryPath();
 private:
 	QGridLayout layout;
 	QLabel endpointlabel;
 	QLineEdit endpointedit;
+	QCheckBox entrycheck;
 	QJsonDocument settingjson;
 	QPushButton apply;
 	std::vector<std::pair<QString, QString>>* dataList;
-	std::thread *webthread;
+	WtThread * webthread;
+	QString entrypath = "";
 };
 class ShareAnyWindow :public QWidget
 {
@@ -101,8 +121,10 @@ public:
 
 private:
 	void GenerateQRcode(QString);
+	void SetClipboard();
 	QPixmap qrcodeimg;
 	QLabel qrlabel;
-	QLabel qrstr;
+	QPushButton qrstr;
 	QGridLayout layout;
 };
+//
