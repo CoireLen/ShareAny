@@ -1,6 +1,6 @@
 {
-    "endpoint": "80",
+    "endpoint": "443",
     "entrypath": false,
-    "uploadpath": "V:/",
+    "usehttps": true,
     "useupload": true
 }

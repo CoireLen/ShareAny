@@ -30,8 +30,10 @@
 class WtThread :public QThread
 {
 public:
-	WtThread(std::vector<std::pair<QString, QString>>* dataList, QString endpoint, std::string path, QString upFolder,bool useupload);
-	void setData(std::vector<std::pair<QString, QString>>* dataList, QString endpoint, std::string path, QString upFolder,bool useupload);
+	WtThread(std::vector<std::pair<QString, QString>>* dataList, 
+		QString endpoint, std::string path, QString upFolder,bool useupload,bool usehttps);
+	void setData(std::vector<std::pair<QString, QString>>* dataList, 
+		QString endpoint, std::string path, QString upFolder,bool useupload, bool usehttps);
 	void run();
 	void serverstop();
 private:
@@ -40,6 +42,7 @@ private:
 	std::string path;
 	QString upFolder;
 	bool useupload;
+	bool usehttps;
 	Wt::WServer* server;
 };
 
@@ -68,9 +71,11 @@ public:
 	void OnApply();
 	QString GetEndpoint();
 	QString GetEntryPath();
+	bool isUseHttps();
 private:
 	QGridLayout layout;
 	QLabel endpointlabel;
+	QCheckBox usehttpscheck;//检查是否启用https
 	QLineEdit endpointedit;
 	QCheckBox entrycheck;
 	QCheckBox uploadcheck;//启用文件上传功能

@@ -51,10 +51,20 @@ void ShareAnyWindow::OnShowQRcode() {
 	if (ipAddress.isEmpty())
 		ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
 	std::cout << ipAddress.toStdString() << std::endl;
-	auto link = "http://" + ipAddress;
-	if (SA_Setting->GetEndpoint() != "80") {
-		link += ":" + SA_Setting->GetEndpoint();
+	QString link;
+	if (SA_Setting->isUseHttps()) {
+		link = "https://"+ipAddress;
+		if (SA_Setting->GetEndpoint() != "443") {
+			link += ":" + SA_Setting->GetEndpoint();
+		}
 	}
+	else {
+		link = "http://" + ipAddress;
+		if (SA_Setting->GetEndpoint() != "80") {
+			link += ":" + SA_Setting->GetEndpoint();
+		}
+	}
+	
 	if (SA_Setting->GetEntryPath() != "") {
 		link +="/" + SA_Setting->GetEntryPath();
 	}
@@ -265,16 +275,17 @@ void strcpyns(char* des, std::string src) {
 	}
 }
 
-WtThread::WtThread(std::vector<std::pair<QString, QString>>* a, QString b ,std::string c, QString d,bool e)
+WtThread::WtThread(std::vector<std::pair<QString, QString>>* a, QString b ,std::string c, QString d,bool e,bool f)
 {
-	this->setData(a, b, c,d,e);
+	this->setData(a, b, c,d,e,f);
 }
-void WtThread::setData(std::vector<std::pair<QString, QString>>* a, QString b, std::string c, QString d,bool e) {
+void WtThread::setData(std::vector<std::pair<QString, QString>>* a, QString b, std::string c, QString d,bool e,bool f) {
 	datalist = a;
 	endpoint = b;
 	path = c;
 	upFolder = d;
 	useupload = e;
+	usehttps = f;
 }
 void WtThread::serverstop() {
 	server->stop();
@@ -284,7 +295,17 @@ void WtThread::run()
 	auto dataList_ = this->datalist;
 	auto upfolder_ = upFolder;
 	auto useupload_ = useupload;
-	static std::vector<std::string> startData = { "", "--docroot",".","--http-address","0.0.0.0","--http-port","80","--resources-dir=./resources","-c","./wt_config.xml"};
+	static std::vector<std::string> startData;
+	if (usehttps)
+	{
+		startData = { "", "--docroot",".","--https-address","0.0.0.0","--https-port","80",
+		"--resources-dir=./resources","-c","./wt_config.xml" ,
+		"--ssl-certificate=./server.pem","--ssl-private-key=./server.key","--ssl-tmp-dh=./dh2048.pem" , 
+		"ssl.cipher-list=ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHER-RSA -AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES11 -SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA :DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256 -SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS- DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA" };
+	}
+	else {
+		startData = { "", "--docroot",".","--http-address","0.0.0.0","--http-port","80","--resources-dir=./resources","-c","./wt_config.xml" };
+	}
 	char** a = (char**)malloc(startData.size() * sizeof(char*));
 	size_t size1 = endpoint.toStdString().size() * sizeof(char);
 	char* port = (char*)calloc(endpoint.toStdString().size()+1,sizeof(char));
@@ -335,23 +356,29 @@ QString getRandomString(int length)
 ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::pair<QString, QString>>* data) {
 	this->setWindowTitle("Setting");
 	this->setLayout(&layout);
+	//HTTPS启用选项
+	usehttpscheck.setText("Use HTTPS");
+	layout.addWidget(&usehttpscheck, 0, 0, 1, 2);
+	//端口
 	endpointlabel.setText("Prot:");
-	endpointlabel.setAlignment(Qt::AlignRight);
-	layout.addWidget(&endpointlabel, 0, 0, 1, 1);
+	//endpointlabel.setAlignment(Qt::AlignRight);
+	layout.addWidget(&endpointlabel, 1, 0, 1, 1);
 	endpointedit.setText("80");
-	layout.addWidget(&endpointedit, 0, 1, 1, 1);
-	apply.setText("Apply");
+	layout.addWidget(&endpointedit, 1, 1, 1, 1);
+	//启用随机链接
 	entrycheck.setText("Use RandLink");
-	layout.addWidget(&entrycheck,1,0,1,2);
-	
-	layout.addWidget(&uploadcheck, 2, 0, 1, 2);
+	layout.addWidget(&entrycheck,2,0,1,2);
+	//启用上传功能
+	layout.addWidget(&uploadcheck, 3, 0, 1, 2);
 	uploadcheck.setText("Use Upload");
-	layout.addWidget(&uploadpath, 3, 0, 1, 1);
-
+	layout.addWidget(&uploadpath, 4, 0, 1, 1);
+	uploadpath.setText("./upload/");
+	//选择上传文件夹
 	connect(&uploadbutton, &QPushButton::clicked, this, &ShareAnySettingWindow::OnSelectFolder);
-	layout.addWidget(&uploadbutton, 3, 1, 1, 1);
+	layout.addWidget(&uploadbutton, 4, 1, 1, 1);
 	uploadbutton.setText("Select Folder");
-	
+	//应用
+	apply.setText("Apply");
 	connect(&apply, &QPushButton::clicked, this, &ShareAnySettingWindow::OnApply);
 	layout.addWidget(&apply);
 	//����Ŷ�ȡsetting.json�Ĵ���
@@ -364,6 +391,7 @@ ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::p
 	json.close();
 	QString uploadfolder = "./upload/";
 	bool useupload = false;
+	bool usehttps = false;
 	if (error.error == QJsonParseError::NoError) {
 		if (settingjson.isObject()) {
 			auto v1 = settingjson.object().take("endpoint");
@@ -389,10 +417,17 @@ ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::p
 				uploadpath.setText(v4.toString());
 				uploadfolder = v4.toString();
 			}
+			auto v5 = settingjson.object().take("usehttps");
+			if (v5.isBool()) {
+				if (v5.toBool() == true) {
+					usehttpscheck.setCheckState(Qt::CheckState::Checked);
+					usehttps = true;
+				}
+			}
 		}
 	}
 	dataList = data;
-	webthread = new WtThread(data, endpointedit.text(),entrypath.toStdString(),uploadfolder, useupload);
+	webthread = new WtThread(data, endpointedit.text(),entrypath.toStdString(),uploadfolder, useupload,usehttps);
 	webthread->start();
 }
 ShareAnySettingWindow::~ShareAnySettingWindow() {
@@ -408,7 +443,8 @@ void ShareAnySettingWindow::OnApply() {
 	else {
 		entrypath = "";
 	}
-	webthread = new WtThread(this->dataList, endpointedit.text(), entrypath.toStdString(),uploadpath.text(),uploadcheck.checkState()== Qt::CheckState::Checked);
+	webthread = new WtThread(this->dataList, endpointedit.text(), entrypath.toStdString(),
+		uploadpath.text(),uploadcheck.checkState()== Qt::CheckState::Checked, usehttpscheck.checkState() == Qt::CheckState::Checked);
 	webthread->start();
 	//������д��setting.json
 	QJsonObject obj;
@@ -417,6 +453,7 @@ void ShareAnySettingWindow::OnApply() {
 	obj.insert("entrypath", entrycheck.checkState()== Qt::CheckState::Checked);//�����������
 	obj.insert("useupload", uploadcheck.checkState() == Qt::CheckState::Checked);
 	obj.insert("uploadpath", uploadpath.text());
+	obj.insert("usehttps", usehttpscheck.checkState() == Qt::CheckState::Checked);
 	//
 	auto jsdoc = QJsonDocument(obj);
 	QFile json("./setting.json");
@@ -438,4 +475,6 @@ QString ShareAnySettingWindow::GetEndpoint() {
 QString ShareAnySettingWindow::GetEntryPath() {
 	return this->entrypath;
 }
-
+bool ShareAnySettingWindow::isUseHttps() {
+	return usehttpscheck.checkState() == Qt::CheckState::Checked;
+}

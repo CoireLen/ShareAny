@@ -8,6 +8,7 @@ ShareAnyApplication::ShareAnyApplication(const Wt::WEnvironment& env, std::vecto
 {
 	if (upFolder != "") {
 		this->uploadFolder = upFolder;
+		std::cout << "UseFolder:" << upFolder.toStdString() << std::endl;
 	}
 	this->dataList = dataList;
 	setTheme(std::make_shared<Wt::WBootstrap5Theme>());
@@ -44,8 +45,8 @@ ShareAnyApplication::ShareAnyApplication(const Wt::WEnvironment& env, std::vecto
 			auto hbox = container->setLayout(std::make_unique<Wt::WHBoxLayout>());
 			auto input1 = std::make_unique<Wt::WTextArea>(i.second.toStdString());
 			input1->setMaximumSize(Wt::WLength("70%"), Wt::WLength(""));
-			static Wt::JSlot js= Wt::JSlot("document.getElementById('" + input1->id() + "').select();execCommand('Copy');alert('Copyed');");
 			hbox->addWidget(std::move(input1));
+			static Wt::JSlot js= Wt::JSlot("document.getElementById('" + hbox->itemAt(0)->widget()->id() + "').select();execCommand('Copy');alert('Copyed');");
 			auto pushbutton = std::make_unique<Wt::WPushButton>("COPY");
 			pushbutton->clicked().connect(js);
 			pushbutton->setMaximumSize(Wt::WLength("30%"), Wt::WLength(""));
@@ -121,7 +122,6 @@ ShareAnyApplication::ShareAnyApplication(const Wt::WEnvironment& env, std::vecto
 	
 }
 
-//以下測試
 void ShareAnyApplication::handleDrop(std::vector<Wt::WFileDropWidget::File*> files)
 {
 	for (unsigned i = 0; i < files.size(); i++) {
