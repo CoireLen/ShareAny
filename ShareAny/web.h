@@ -31,7 +31,7 @@ public:
 private:
     QTextCodec* coder = QTextCodec::codecForName("GBK");
     std::vector<std::pair<QString, QString>>* dataList;
-
+    unsigned int id = 0;
     QString uploadFolder;//本地存放文件夾
     unsigned int maxfiles = 36;
     Wt::WText* log_;

@@ -45,8 +45,11 @@ ShareAnyApplication::ShareAnyApplication(const Wt::WEnvironment& env, std::vecto
 			auto hbox = container->setLayout(std::make_unique<Wt::WHBoxLayout>());
 			auto input1 = std::make_unique<Wt::WTextArea>(i.second.toStdString());
 			input1->setMaximumSize(Wt::WLength("70%"), Wt::WLength(""));
+			auto inputid = ("textarea" + QString::number(id++)).toStdString();
+			input1->setId(inputid);
 			hbox->addWidget(std::move(input1));
-			static Wt::JSlot js= Wt::JSlot("document.getElementById('" + hbox->itemAt(0)->widget()->id() + "').select();execCommand('Copy');alert('Copyed');");
+			
+			static Wt::JSlot js= Wt::JSlot("document.getElementById('" + inputid + "').select();execCommand('Copy');alert('Copyed');");
 			auto pushbutton = std::make_unique<Wt::WPushButton>("COPY");
 			pushbutton->clicked().connect(js);
 			pushbutton->setMaximumSize(Wt::WLength("30%"), Wt::WLength(""));
