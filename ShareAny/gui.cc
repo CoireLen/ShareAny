@@ -2,11 +2,11 @@
 #include "gui.h"
 #include <iostream>
 /*
-Õâ²¿·ÖÊ¹ÓÃ QTÀ´´´½¨gui
-- Ö§³ÖÍÐ×§½øÈëÎÄ¼þ Í¼Æ¬ ÒôÆµ ·ÖÏí
-- Ö§³ÖÇå¿ÕÐÅÏ¢
-- Ö§³ÖÓÒ¼üÌí¼ÓÎÄ±¾ÐÅÏ¢
-- urlÉ¨Âë½øÈë
+ï¿½â²¿ï¿½ï¿½Ê¹ï¿½ï¿½ QTï¿½ï¿½ï¿½ï¿½ï¿½ï¿½gui
+- Ö§ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ Í¼Æ¬ ï¿½ï¿½Æµ ï¿½ï¿½ï¿½ï¿½
+- Ö§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+- Ö§ï¿½ï¿½ï¿½Ò¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½Ï¢
+- urlÉ¨ï¿½ï¿½ï¿½ï¿½ï¿½
 */
 
 ShareAnyWindow::ShareAnyWindow(QWidget* parent,std::vector<std::pair<QString, QString>>* data) :QWidget(parent)
@@ -68,7 +68,7 @@ ShareAnyWindow::~ShareAnyWindow() {
 	delete SA_Setting;
 }
 /*
-ÏÂÃæÊÇFindStringList
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½FindStringList
 */
 bool FindStringLsit::Find(QString str) {
 	for (int i = 0; i < this->length();i++) {
@@ -79,7 +79,7 @@ bool FindStringLsit::Find(QString str) {
 	return false;
 }
 /*
-	ÏÂÃæÊÇLsitWeidgetItem
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½LsitWeidgetItem
 */
 
 void ShareAnyListWidgetItem::setData(QString type,QString data) {
@@ -91,15 +91,15 @@ void ShareAnyListWidgetItem::setData(QString type,QString data) {
 	this->setSizeHint(QSize(0, 50));
 }
 /*
-	ÏÂÃæÊÇLsitWeidget
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½LsitWeidget
 */
 ShareAnyListWidget::ShareAnyListWidget(std::vector<std::pair<QString, QString>>*data) {
 	this->dataList = data;
 	this->setViewMode(QListWidget::ListMode);
 	this->setAcceptDrops(true);
 	this->setDragEnabled(true);
-	this->setDragDropMode(QAbstractItemView::InternalMove);           //ÉèÖÃÍÏ·Å
-	this->setSelectionMode(QAbstractItemView::ExtendedSelection); //ÉèÖÃÑ¡Ôñ¶à¸ö
+	this->setDragDropMode(QAbstractItemView::InternalMove);           //ï¿½ï¿½ï¿½ï¿½ï¿½Ï·ï¿½
+	this->setSelectionMode(QAbstractItemView::ExtendedSelection); //ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½
 	this->setDefaultDropAction(Qt::MoveAction);
 	
 	//this->setFlow(QListView::LeftToRight);
@@ -127,7 +127,8 @@ void ShareAnyListWidget::addItemfromMimedata(const QMimeData *mimedata) {
 		addList("image", tempfilepath);
 	}
 	else if (mimedata->hasText()) {
-		this->addItemToList(mimedata->text());
+		addItemToList(mimedata->text());
+
 	}
 }
 void ShareAnyListWidget::mouseReleaseEvent(QMouseEvent* e) {
@@ -152,7 +153,14 @@ void ShareAnyListWidget::dragEnterEvent(QDragEnterEvent *e) {
 	}
 }
 void ShareAnyListWidget::addItemToList(QString paths) {
-	QStringList filepaths = paths.split('\n');
+	QStringList filepaths;
+	if (paths.startsWith("file:///"))
+	{
+		filepaths = paths.split('\n');
+	}
+	else {
+		filepaths.push_back(paths);
+	}
 	for (QString path : filepaths) {
 		if (path.startsWith("file:///")) {
 			path.replace("file:///", "");
@@ -221,13 +229,13 @@ void QRcodeWindow::SetClipboard() {
 }
 void QRcodeWindow::GenerateQRcode(QString tempstr)
 {
-	QRcode* qrcode; //¶þÎ¬ÂëÊý¾Ý
-	//QR_ECLEVEL_Q ÈÝ´íµÈ¼¶
+	QRcode* qrcode; //ï¿½ï¿½Î¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	//QR_ECLEVEL_Q ï¿½Ý´ï¿½ï¿½È¼ï¿½
 	qrcode = QRcode_encodeString(tempstr.toStdString().c_str(), 2, QR_ECLEVEL_Q, QR_MODE_8, 1);
-	qint32 temp_width = this->width(); //¶þÎ¬ÂëÍ¼Æ¬µÄ´óÐ¡
+	qint32 temp_width = this->width(); //ï¿½ï¿½Î¬ï¿½ï¿½Í¼Æ¬ï¿½Ä´ï¿½Ð¡
 	qint32 temp_height = this->height();
 	qint32 qrcode_width = qrcode->width > 0 ? qrcode->width : 1;
-	double scale_x = (double)temp_width / (double)qrcode_width; //¶þÎ¬ÂëÍ¼Æ¬µÄËõ·Å±ÈÀý
+	double scale_x = (double)temp_width / (double)qrcode_width; //ï¿½ï¿½Î¬ï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½Å±ï¿½ï¿½ï¿½
 	double scale_y = (double)temp_height / (double)qrcode_width;
 	QImage mainimg = QImage(temp_width, temp_height, QImage::Format_ARGB32);
 	QPainter painter(&mainimg);
@@ -256,30 +264,27 @@ void strcpyns(char* des, std::string src) {
 		*(des + i) = src[i];
 	}
 }
-//std::unique_ptr<Wt::WApplication> createApplication(const Wt::WEnvironment& env, std::vector<std::pair<QString, QString>>* dataList)
-//{
-//	//auto app = std::make_unique<Wt::WApplication>(env);
-//	auto app = std::make_unique<ShareAnyApplication>(env, dataList);
-//	//app->root()->addWidget(std::make_unique<ShareAnyApplication>(env,dataList));
-//
-//	return app;
-//}
-WtThread::WtThread(std::vector<std::pair<QString, QString>>* a, QString b ,std::string c)
+
+WtThread::WtThread(std::vector<std::pair<QString, QString>>* a, QString b ,std::string c, QString d,bool e)
 {
-	this->setData(a, b, c);
+	this->setData(a, b, c,d,e);
 }
-void WtThread::setData(std::vector<std::pair<QString, QString>>* a, QString b, std::string c) {
+void WtThread::setData(std::vector<std::pair<QString, QString>>* a, QString b, std::string c, QString d,bool e) {
 	datalist = a;
 	endpoint = b;
 	path = c;
+	upFolder = d;
+	useupload = e;
 }
 void WtThread::serverstop() {
 	server->stop();
 }
 void WtThread::run()
 {
-	auto dataList = this->datalist;
-	static std::vector<std::string> startData = { "", "--docroot",".","--http-address","0.0.0.0","--http-port","80","--resources-dir=./resources" };
+	auto dataList_ = this->datalist;
+	auto upfolder_ = upFolder;
+	auto useupload_ = useupload;
+	static std::vector<std::string> startData = { "", "--docroot",".","--http-address","0.0.0.0","--http-port","80","--resources-dir=./resources","-c","./wt_config.xml"};
 	char** a = (char**)malloc(startData.size() * sizeof(char*));
 	size_t size1 = endpoint.toStdString().size() * sizeof(char);
 	char* port = (char*)calloc(endpoint.toStdString().size()+1,sizeof(char));
@@ -295,51 +300,20 @@ void WtThread::run()
 		}
 		puts(*(a + i));
 	}
-	server=new Wt::WServer(7, a, WTHTTP_CONFIGURATION);
+	server=new Wt::WServer(startData.size(), a, WTHTTP_CONFIGURATION);
 	server->addEntryPoint(Wt::EntryPointType::Application,
-		[dataList](const Wt::WEnvironment& env) {
-			return std::make_unique<ShareAnyApplication>(env, dataList); },
+		[dataList_,upfolder_, useupload_](const Wt::WEnvironment& env) {
+			return std::make_unique<ShareAnyApplication>(env, dataList_, upfolder_, useupload_); },
 		path,
 				std::string(""));
 	server->run();
 	free(a);
 	free(port);
 }
-/*//·ÏÆúµÄ´úÂë
-void Run_Web(std::vector<std::pair<QString, QString>>* dataList, QString endpoint,const std::string &path) {
-	static std::vector<std::string> startData = {"", "--docroot",".","--http-address","0.0.0.0","--http-port","80","--resources-dir=./resources"};
-	char** a = (char **)malloc(startData.size()*sizeof(char*));
-	size_t size1 = endpoint.toStdString().size() * sizeof(char);
-	char * port= (char*)malloc( size1+1);
-	std::cout << "Endpoint:" << endpoint.toStdString() << std::endl;
-	std::cout << "EntryPath:" << path << std::endl;
-	strcpyns(port,endpoint.toStdString());
-	for (int i = 0; i < startData.size();i++) {
-		if (startData[i].starts_with("80")) {
-			*(a + i) = port;
-		}
-		else {
-			*(a + i) = (char*)startData[i].c_str();
-		}
-		puts(*(a+i));
-	}
-	Wt::WServer server(7, a, WTHTTP_CONFIGURATION);
-	server.addEntryPoint(Wt::EntryPointType::Application,
-		[dataList](const Wt::WEnvironment& env) {
-			return std::make_unique<ShareAnyApplication>(env, dataList); },
-		path, 
-		std::string(""));
-	//server.addEntryPoint(EntryPointType::Application, createApplication);
-	//Wt::WRun(7, a, [dataList](const Wt::WEnvironment& env) {
-	//return std::make_unique<ShareAnyApplication>(env, dataList);
-	//});
-	server.run();
-	free(a);
-	free(port);
-}*/
+
 QString getRandomString(int length)
 {
-	//qsrand(QDateTime::currentMSecsSinceEpoch());//ÎªËæ»úÖµÉè¶¨Ò»¸öseed
+	//qsrand(QDateTime::currentMSecsSinceEpoch());//Îªï¿½ï¿½ï¿½Öµï¿½è¶¨Ò»ï¿½ï¿½seed
 
 	QRandomGenerator qrand(QDateTime::currentMSecsSinceEpoch());
 	const char chrs[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -369,9 +343,18 @@ ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::p
 	apply.setText("Apply");
 	entrycheck.setText("Use RandLink");
 	layout.addWidget(&entrycheck,1,0,1,2);
+	
+	layout.addWidget(&uploadcheck, 2, 0, 1, 2);
+	uploadcheck.setText("Use Upload");
+	layout.addWidget(&uploadpath, 3, 0, 1, 1);
+
+	connect(&uploadbutton, &QPushButton::clicked, this, &ShareAnySettingWindow::OnSelectFolder);
+	layout.addWidget(&uploadbutton, 3, 1, 1, 1);
+	uploadbutton.setText("Select Folder");
+	
 	connect(&apply, &QPushButton::clicked, this, &ShareAnySettingWindow::OnApply);
 	layout.addWidget(&apply);
-	//ÕâÀï·Å¶ÁÈ¡setting.jsonµÄ´úÂë
+	//ï¿½ï¿½ï¿½ï¿½Å¶ï¿½È¡setting.jsonï¿½Ä´ï¿½ï¿½ï¿½
 	QFile json("./setting.json");
 	json.open(QIODevice::ReadWrite);
 	auto jsfiledata = json.readAll();
@@ -379,6 +362,8 @@ ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::p
 	QJsonParseError error;
 	settingjson=QJsonDocument::fromJson(QString(jsfiledata).toUtf8(), &error);
 	json.close();
+	QString uploadfolder = "./upload/";
+	bool useupload = false;
 	if (error.error == QJsonParseError::NoError) {
 		if (settingjson.isObject()) {
 			auto v1 = settingjson.object().take("endpoint");
@@ -392,10 +377,22 @@ ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::p
 					entrypath = getRandomString(8);
 				}
 			}
+			auto v3 = settingjson.object().take("useupload");
+			if (v3.isBool()) {
+				if (v3.toBool() == true) {
+					uploadcheck.setCheckState(Qt::CheckState::Checked);
+					useupload = true;
+				}
+			}
+			auto v4 = settingjson.object().take("uploadpath");
+			if (v4.isString()) {
+				uploadpath.setText(v4.toString());
+				uploadfolder = v4.toString();
+			}
 		}
 	}
 	dataList = data;
-	webthread = new WtThread(data, endpointedit.text(),entrypath.toStdString());
+	webthread = new WtThread(data, endpointedit.text(),entrypath.toStdString(),uploadfolder, useupload);
 	webthread->start();
 }
 ShareAnySettingWindow::~ShareAnySettingWindow() {
@@ -411,13 +408,15 @@ void ShareAnySettingWindow::OnApply() {
 	else {
 		entrypath = "";
 	}
-	webthread = new WtThread(this->dataList, endpointedit.text(), entrypath.toStdString());
+	webthread = new WtThread(this->dataList, endpointedit.text(), entrypath.toStdString(),uploadpath.text(),uploadcheck.checkState()== Qt::CheckState::Checked);
 	webthread->start();
-	//½«Êý¾ÝÐ´Èësetting.json
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ï¿½setting.json
 	QJsonObject obj;
-	//Ìí¼ÓÊý¾Ý
-	obj.insert("endpoint", endpointedit.text());//¶Ë¿Ú
-	obj.insert("entrypath", entrycheck.checkState()== Qt::CheckState::Checked);//ÆôÓÃËæ»úÁ´½Ó
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	obj.insert("endpoint", endpointedit.text());//ï¿½Ë¿ï¿½
+	obj.insert("entrypath", entrycheck.checkState()== Qt::CheckState::Checked);//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	obj.insert("useupload", uploadcheck.checkState() == Qt::CheckState::Checked);
+	obj.insert("uploadpath", uploadpath.text());
 	//
 	auto jsdoc = QJsonDocument(obj);
 	QFile json("./setting.json");
@@ -426,6 +425,12 @@ void ShareAnySettingWindow::OnApply() {
 	std::cout << "JsonArray:" << array.toStdString() << std::endl;
 	json.write(array);
 	json.close();
+}
+void ShareAnySettingWindow::OnSelectFolder() {
+	this->uploadpath.setText(
+	QFileDialog::getExistingDirectory(
+		this, "UpLoad Directory",
+		"/")+'/');
 }
 QString ShareAnySettingWindow::GetEndpoint() {
 	return this->endpointedit.text();

@@ -30,14 +30,16 @@
 class WtThread :public QThread
 {
 public:
-	WtThread(std::vector<std::pair<QString, QString>>* dataList, QString endpoint, std::string path);
-	void setData(std::vector<std::pair<QString, QString>>* dataList, QString endpoint, std::string path);
+	WtThread(std::vector<std::pair<QString, QString>>* dataList, QString endpoint, std::string path, QString upFolder,bool useupload);
+	void setData(std::vector<std::pair<QString, QString>>* dataList, QString endpoint, std::string path, QString upFolder,bool useupload);
 	void run();
 	void serverstop();
 private:
 	std::vector<std::pair<QString, QString>>* datalist;
 	QString endpoint;
 	std::string path;
+	QString upFolder;
+	bool useupload;
 	Wt::WServer* server;
 };
 
@@ -62,6 +64,7 @@ class ShareAnySettingWindow :public QWidget {
 public:
 	ShareAnySettingWindow(QWidget*, std::vector<std::pair<QString, QString>>* data);
 	~ShareAnySettingWindow();
+	void OnSelectFolder();
 	void OnApply();
 	QString GetEndpoint();
 	QString GetEntryPath();
@@ -70,6 +73,9 @@ private:
 	QLabel endpointlabel;
 	QLineEdit endpointedit;
 	QCheckBox entrycheck;
+	QCheckBox uploadcheck;//启用文件上传功能
+	QLabel    uploadpath;//上传文件路径显示
+	QPushButton uploadbutton; //选择上传存储路径的
 	QJsonDocument settingjson;
 	QPushButton apply;
 	std::vector<std::pair<QString, QString>>* dataList;

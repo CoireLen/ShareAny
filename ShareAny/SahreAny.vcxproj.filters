@@ -15,25 +15,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="gui.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="web.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="web.h">
       <Filter>源文件</Filter>
     </ClInclude>
     <ClInclude Include="gui.h">
       <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -45,5 +34,21 @@
     <Image Include="share.ico">
       <Filter>资源文件</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\Lib\wt-4.6.1\examples\filedrop\style.css">
+      <Filter>源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="web.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="gui.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,4 +1,6 @@
 {
-    "endpoint": "8080",
-    "entrypath": false
+    "endpoint": "80",
+    "entrypath": false,
+    "uploadpath": "V:/",
+    "useupload": true
 }

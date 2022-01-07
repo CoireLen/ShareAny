@@ -4,21 +4,37 @@
 建立web服务
 展示页面
 */
-ShareAnyApplication::ShareAnyApplication(const Wt::WEnvironment& env, std::vector<std::pair<QString, QString>>* dataList) : WApplication(env)
+ShareAnyApplication::ShareAnyApplication(const Wt::WEnvironment& env, std::vector<std::pair<QString, QString>>* dataList,QString upFolder,bool useupload) : WApplication(env)
 {
-	instance()->internalPathChanged()
-		.connect(this, &ShareAnyApplication::RandPage);
-	//internalPathChanged().connect(this,&ShareAnyApplication::RandPage);
+	if (upFolder != "") {
+		this->uploadFolder = upFolder;
+	}
 	this->dataList = dataList;
-	Wt::WApplication* app = new Wt::WApplication(env);
-	app->setTitle("ShareAnything");
 	setTheme(std::make_shared<Wt::WBootstrap5Theme>());
-	//setCssTheme("polished");
-	//<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+	setTitle("ShareAny");
 	root()->setContentAlignment(Wt::AlignmentFlag::Center);
-	//这里放个上传区D:\Program\ShareAny\upload
-	//以下主体动态代码
+	//这里放个上传区
+	if (useupload) {
+		drop_ = root()->addNew<Wt::WFileDropWidget>();
 
+		drop_->setDropIndicationEnabled(true);
+		// drop_->setGlobalDropEnabled(true);
+
+		drop_->drop().connect(this, &ShareAnyApplication::handleDrop);
+		drop_->newUpload().connect(this, &ShareAnyApplication::updateProgressListener);
+		drop_->uploaded().connect(this, &ShareAnyApplication::saveFile);
+		drop_->uploadFailed().connect(this, &ShareAnyApplication::failed);
+		drop_->tooLarge().connect(this, &ShareAnyApplication::tooLarge);
+
+		log_ = root()->addWidget(std::make_unique<Wt::WText>());
+		log_->setInline(false);
+		log_->setTextFormat(Wt::TextFormat::XHTML);
+
+		Wt::WPushButton* abort = root()->addNew<Wt::WPushButton>("Abort current upload");
+		abort->clicked().connect(this, &ShareAnyApplication::cancelUpload);
+	}
+	//以下主体动态代码
+	
 	for (auto i : *dataList) {
 		std::cout << i.second.toStdString() << std::endl;
 		if (i.first == "text") {
@@ -102,9 +118,96 @@ ShareAnyApplication::ShareAnyApplication(const Wt::WEnvironment& env, std::vecto
 			root()->addNew<Wt::WBreak>();
 		}
 	}
+	
 }
 
-//以下测试
-void ShareAnyApplication::RandPage(const std::string& internalPath) {
-	std::cout << "InternalPath:" << internalPath << std::endl;
+//以下測試
+void ShareAnyApplication::handleDrop(std::vector<Wt::WFileDropWidget::File*> files)
+{
+	for (unsigned i = 0; i < files.size(); i++) {
+		Wt::WFileDropWidget::File* file = files[i];
+		if (nbUploads_ >= maxfiles) {
+			drop_->cancelUpload(file);
+			continue;
+		}
+
+		auto block = drop_->addNew<Wt::WContainerWidget>();
+		block->setToolTip(file->clientFileName() + " [" + file->mimeType() + "]");
+		block->addStyleClass("upload-block");
+
+		icons_[file] = block;
+		nbUploads_++;
+	}
+
+	if (nbUploads_ >= maxfiles) {
+		log_->setText("That's enough ...");
+		drop_->setAcceptDrops(false);
+	}
+}
+
+void ShareAnyApplication::cancelUpload()
+{
+	if (drop_->uploads().size() == drop_->currentIndex())
+		return;
+
+	Wt::WFileDropWidget::File* currentFile = drop_->uploads()[drop_->currentIndex()];
+	drop_->cancelUpload(currentFile);
+	icons_[currentFile]->addStyleClass("cancelled");
+}
+
+void ShareAnyApplication::tooLarge(Wt::WFileDropWidget::File* file, ::uint64_t)
+{
+	icons_[file]->addStyleClass("invalid");
+
+	log_->setText("File too large: " + file->clientFileName());
+}
+
+void ShareAnyApplication::failed(Wt::WFileDropWidget::File* file)
+{
+	icons_[file]->addStyleClass("invalid");
+
+	log_->setText("Upload failed: " + file->clientFileName());
+}
+
+void ShareAnyApplication::saveFile(Wt::WFileDropWidget::File* file)
+{
+	std::string spool = file->uploadedFile().spoolFileName();
+	std::ifstream src(spool.c_str(), std::ios::binary);
+
+	std::string saveName = uploadFolder.toStdString() + file->clientFileName();
+
+	std::ofstream dest(saveName.c_str(), std::ios::binary);
+	if (dest.fail()) {
+		std::cerr << "**** ERROR: The output file could not be opened"
+			<< std::endl;
+		return;
+	}
+
+	dest << src.rdbuf();
+
+	if (icons_.find(file) != icons_.end()) {
+		icons_[file]->addStyleClass("ready");
+		drop_->remove(file);
+	}
+}
+
+void ShareAnyApplication::updateProgressListener()
+{
+	// if there is a next file listen for progress
+	if (drop_->currentIndex() < drop_->uploads().size()) {
+		Wt::WFileDropWidget::File* file = drop_->uploads()[drop_->currentIndex()];
+		file->dataReceived().connect(this, &ShareAnyApplication::showProgress);
+		std::string fileName = Wt::Utils::htmlEncode(file->clientFileName());
+		log_->setText("uploading file &quot;" + fileName + "&quot;");
+	}
+}
+
+void ShareAnyApplication::showProgress(::uint64_t current, ::uint64_t total)
+{
+	Wt::WFileDropWidget::File* file = drop_->uploads()[drop_->currentIndex()];
+	std::string c = std::to_string(current / 1024);
+	std::string t = std::to_string(total / 1024);
+	std::string fileName = Wt::Utils::htmlEncode(file->clientFileName());
+	log_->setText("uploading file <i>&quot;" + fileName + "&quot;</i>"
+		+ " (" + c + "kB" + " out of " + t + "kB)");
 }
