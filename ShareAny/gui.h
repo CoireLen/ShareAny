@@ -1,3 +1,4 @@
+#include "web.h"
 #include <QtWidgets/qlistwidget.h>
 #include <QtGui/qbitmap.h>
 #include <QtWidgets/QApplication>
@@ -25,15 +26,14 @@
 #include <QtCore/qtemporarydir.h>
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qjsonobject.h>
+#include <QtCore/QDateTime>
 #include <qrencode.h>
 
 class WtThread :public QThread
 {
 public:
 	WtThread(std::vector<std::pair<QString, QString>>* dataList, 
-		QString endpoint, std::string path, QString upFolder,bool useupload,bool usehttps);
-	void setData(std::vector<std::pair<QString, QString>>* dataList, 
-		QString endpoint, std::string path, QString upFolder,bool useupload, bool usehttps);
+        QString endpoint, std::string path, QString upFolder,bool useupload,bool usehttps);
 	void run();
 	void serverstop();
 private:
@@ -43,7 +43,7 @@ private:
 	QString upFolder;
 	bool useupload;
 	bool usehttps;
-	Wt::WServer* server;
+    Wt::WServer* server;
 };
 
 class ShareAnyListWidget :public QListWidget {
@@ -65,7 +65,7 @@ private:
 };
 class ShareAnySettingWindow :public QWidget {
 public:
-	ShareAnySettingWindow(QWidget*, std::vector<std::pair<QString, QString>>* data);
+    ShareAnySettingWindow(QWidget*, std::vector<std::pair<QString, QString>>* data);
 	~ShareAnySettingWindow();
 	void OnSelectFolder();
 	void OnApply();
@@ -75,22 +75,23 @@ public:
 private:
 	QGridLayout layout;
 	QLabel endpointlabel;
-	QCheckBox usehttpscheck;//¼ì²éÊÇ·ñÆôÓÃhttps
+	QCheckBox usehttpscheck;//ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½https
 	QLineEdit endpointedit;
 	QCheckBox entrycheck;
-	QCheckBox uploadcheck;//ÆôÓÃÎÄ¼þÉÏ´«¹¦ÄÜ
-	QLabel    uploadpath;//ÉÏ´«ÎÄ¼þÂ·¾¶ÏÔÊ¾
-	QPushButton uploadbutton; //Ñ¡ÔñÉÏ´«´æ´¢Â·¾¶µÄ
+	QCheckBox uploadcheck;//ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ï´ï¿½ï¿½ï¿½ï¿½ï¿½
+	QLabel    uploadpath;//ï¿½Ï´ï¿½ï¿½Ä¼ï¿½Â·ï¿½ï¿½ï¿½ï¿½Ê¾
+	QPushButton uploadbutton; //Ñ¡ï¿½ï¿½ï¿½Ï´ï¿½ï¿½æ´¢Â·ï¿½ï¿½ï¿½ï¿½
 	QJsonDocument settingjson;
 	QPushButton apply;
 	std::vector<std::pair<QString, QString>>* dataList;
 	WtThread * webthread;
 	QString entrypath = "";
+    QStringList argv;
 };
 class ShareAnyWindow :public QWidget
 {
 public:
-	ShareAnyWindow(QWidget* parent ,std::vector<std::pair<QString, QString>> *dataList);
+    ShareAnyWindow(QWidget* parent ,std::vector<std::pair<QString, QString>> *dataList);
 	~ShareAnyWindow();
 	void OnRemove();
 	void OnShowQRcode();
@@ -103,12 +104,13 @@ private:
 	ShareAnySettingWindow *SA_Setting;
 };
 
-class FindStringLsit:public QStringList
+class FindStringLsit
 {
 public:
+    FindStringLsit(std::vector<std::string> list);
 	bool Find(QString);
 private:
-
+    std::vector<std::string> list;
 };
 
 class ShareAnyListWidgetItem :public QListWidgetItem

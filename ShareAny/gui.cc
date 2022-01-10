@@ -1,4 +1,3 @@
-#include "web.h"
 #include "gui.h"
 #include <iostream>
 /*
@@ -8,7 +7,6 @@
 - ֧���Ҽ������ı���Ϣ
 - urlɨ�����
 */
-
 ShareAnyWindow::ShareAnyWindow(QWidget* parent,std::vector<std::pair<QString, QString>>* data) :QWidget(parent)
 {
 	this->dataList = data;
@@ -25,9 +23,9 @@ ShareAnyWindow::ShareAnyWindow(QWidget* parent,std::vector<std::pair<QString, QS
 	toolBar.addAction(&toolButton3);
 	connect(&toolButton3, &QAction::triggered, this, &ShareAnyWindow::OnShowSetting);
 	layout.addWidget(&toolBar);
-	this->SA_listwidget = new ShareAnyListWidget(dataList);
-	this->SA_Setting = new ShareAnySettingWindow(this,data);
-	layout.addWidget(SA_listwidget);
+    this->SA_listwidget = new ShareAnyListWidget(dataList);
+    this->SA_Setting = new ShareAnySettingWindow(this,data);
+    layout.addWidget(SA_listwidget);
 	this->show();
 	
 }
@@ -81,11 +79,11 @@ ShareAnyWindow::~ShareAnyWindow() {
 ������FindStringList
 */
 bool FindStringLsit::Find(QString str) {
-	for (int i = 0; i < this->length();i++) {
-		if (this->at(i)==str) {
-			return true;
-		}
-	}
+    for(auto i:list){
+        if(str.toStdString()==i){
+            return true;
+        }
+    }
 	return false;
 }
 /*
@@ -137,7 +135,7 @@ void ShareAnyListWidget::addItemfromMimedata(const QMimeData *mimedata) {
 		addList("image", tempfilepath);
 	}
 	else if (mimedata->hasText()) {
-		addItemToList(mimedata->text());
+        addItemToList(mimedata->text().toUtf8());
 
 	}
 }
@@ -162,6 +160,9 @@ void ShareAnyListWidget::dragEnterEvent(QDragEnterEvent *e) {
 		e->accept();
 	}
 }
+FindStringLsit::FindStringLsit(std::vector<std::string> thelist){
+    list=thelist;
+}
 void ShareAnyListWidget::addItemToList(QString paths) {
 	QStringList filepaths;
 	if (paths.startsWith("file:///"))
@@ -173,12 +174,20 @@ void ShareAnyListWidget::addItemToList(QString paths) {
 	}
 	for (QString path : filepaths) {
 		if (path.startsWith("file:///")) {
-			path.replace("file:///", "");
+			#if defined(WIN32) || defined(_WIN32) || defined(_WIN32_) || defined(WIN64) || defined(_WIN64) || defined(_WIN64_)
+			#define REPLACEDATA ""
+			#else
+			#define REPLACEDATA "/"
+			#endif
+            path.replace("file:///", REPLACEDATA);
 			QStringList a = path.split('.');
-			if (FindStringLsit({ "jpg", "png", "gif" }).Find(a.at(a.length() - 1))) {
+            std::vector<std::string> list3={ "mp4" };
+            std::vector<std::string> list2={ "mp3", "aac", "flac" };
+            std::vector<std::string> list1={ "jpg", "png", "gif" };
+            if (FindStringLsit(list1).Find(a.at(a.length() - 1))) {
 				this->addList("image", path);
 			}
-			else if (FindStringLsit({ "mp3", "aac", "flac" }).Find(a.at(a.length() - 1))) {
+            else if (FindStringLsit(list2).Find(a.at(a.length() - 1))) {
 				this->addList("audio", path);
 			}
 			else if (FindStringLsit({ "mp4" }).Find(a.at(a.length() - 1))) {
@@ -210,7 +219,7 @@ void ShareAnyListWidget::dropEvent(QDropEvent *e)
 	}
 }
 void ShareAnyListWidget::addList(QString type,QString data) {
-	std::cout << type.toStdString() << ":" << data.toStdString() << std::endl;
+    std::cout << type.toStdString() << ":" << data.toStdString() << std::endl;
 	if (this->dataList!=NULL)
 		this->dataList->push_back(std::pair<QString,QString>(type, data));
 	std::vector<std::pair<QString, QString>>vp1;
@@ -277,15 +286,12 @@ void strcpyns(char* des, std::string src) {
 
 WtThread::WtThread(std::vector<std::pair<QString, QString>>* a, QString b ,std::string c, QString d,bool e,bool f)
 {
-	this->setData(a, b, c,d,e,f);
-}
-void WtThread::setData(std::vector<std::pair<QString, QString>>* a, QString b, std::string c, QString d,bool e,bool f) {
-	datalist = a;
-	endpoint = b;
-	path = c;
-	upFolder = d;
-	useupload = e;
-	usehttps = f;
+    datalist = a;
+    endpoint = b;
+    path = c;
+    upFolder = d;
+    useupload = e;
+    usehttps = f;
 }
 void WtThread::serverstop() {
 	server->stop();
@@ -298,13 +304,13 @@ void WtThread::run()
 	static std::vector<std::string> startData;
 	if (usehttps)
 	{
-		startData = { "", "--docroot",".","--https-address","0.0.0.0","--https-port","80",
-		"--resources-dir=./resources","-c","./wt_config.xml" ,
-		"--ssl-certificate=./server.pem","--ssl-private-key=./server.key","--ssl-tmp-dh=./dh2048.pem" , 
+        startData = { ".", "--docroot",".","--https-address","0.0.0.0","--https-port","80",
+        "--resources-dir=resources","-c","wt_config.xml" ,
+        "--ssl-certificate=server.pem","--ssl-private-key=server.key","--ssl-tmp-dh=dh2048.pem" ,
 		"ssl.cipher-list=ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHER-RSA -AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES11 -SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA :DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256 -SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS- DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA" };
 	}
 	else {
-		startData = { "", "--docroot",".","--http-address","0.0.0.0","--http-port","80","--resources-dir=./resources","-c","./wt_config.xml" };
+        startData = { ".", "--docroot",".","--http-address","0.0.0.0","--http-port","80","--resources-dir=resources","-c","wt_config.xml"};
 	}
 	char** a = (char**)malloc(startData.size() * sizeof(char*));
 	size_t size1 = endpoint.toStdString().size() * sizeof(char);
@@ -313,7 +319,7 @@ void WtThread::run()
 	std::cout << "EntryPath:" << path << std::endl;
 	strcpyns(port, endpoint.toStdString());
 	for (int i = 0; i < startData.size(); i++) {
-		if (startData[i].starts_with("80")) {
+        if (QString(startData[i].c_str()).startsWith("80")) {
 			*(a + i) = port;
 		}
 		else {
@@ -324,7 +330,7 @@ void WtThread::run()
 	server=new Wt::WServer(startData.size(), a, WTHTTP_CONFIGURATION);
 	server->addEntryPoint(Wt::EntryPointType::Application,
 		[dataList_,upfolder_, useupload_](const Wt::WEnvironment& env) {
-			return std::make_unique<ShareAnyApplication>(env, dataList_, upfolder_, useupload_); },
+			return std::make_unique<ShareAnyWebApplication>(env, dataList_, upfolder_, useupload_); },
 		path,
 				std::string(""));
 	server->run();
@@ -372,7 +378,7 @@ ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::p
 	layout.addWidget(&uploadcheck, 3, 0, 1, 2);
 	uploadcheck.setText("Use Upload");
 	layout.addWidget(&uploadpath, 4, 0, 1, 1);
-	uploadpath.setText("./upload/");
+    uploadpath.setText("upload/");
 	//选择上传文件夹
 	connect(&uploadbutton, &QPushButton::clicked, this, &ShareAnySettingWindow::OnSelectFolder);
 	layout.addWidget(&uploadbutton, 4, 1, 1, 1);
@@ -382,14 +388,14 @@ ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::p
 	connect(&apply, &QPushButton::clicked, this, &ShareAnySettingWindow::OnApply);
 	layout.addWidget(&apply);
 	//����Ŷ�ȡsetting.json�Ĵ���
-	QFile json("./setting.json");
+    QFile json("setting.json");
 	json.open(QIODevice::ReadWrite);
 	auto jsfiledata = json.readAll();
 	std::cout << "JsonFileRead:" << jsfiledata.toStdString() << std::endl;
 	QJsonParseError error;
 	settingjson=QJsonDocument::fromJson(QString(jsfiledata).toUtf8(), &error);
 	json.close();
-	QString uploadfolder = "./upload/";
+    QString uploadfolder = "upload/";
 	bool useupload = false;
 	bool usehttps = false;
 	if (error.error == QJsonParseError::NoError) {
@@ -427,8 +433,9 @@ ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::p
 		}
 	}
 	dataList = data;
-	webthread = new WtThread(data, endpointedit.text(),entrypath.toStdString(),uploadfolder, useupload,usehttps);
-	webthread->start();
+
+    webthread = new WtThread(data, endpointedit.text(),entrypath.toStdString(),uploadfolder, useupload,usehttps);
+    webthread->start();
 }
 ShareAnySettingWindow::~ShareAnySettingWindow() {
 	webthread->serverstop();
@@ -444,7 +451,7 @@ void ShareAnySettingWindow::OnApply() {
 		entrypath = "";
 	}
 	webthread = new WtThread(this->dataList, endpointedit.text(), entrypath.toStdString(),
-		uploadpath.text(),uploadcheck.checkState()== Qt::CheckState::Checked, usehttpscheck.checkState() == Qt::CheckState::Checked);
+        uploadpath.text(),uploadcheck.checkState()== Qt::CheckState::Checked, usehttpscheck.checkState() == Qt::CheckState::Checked);
 	webthread->start();
 	//������д��setting.json
 	QJsonObject obj;
@@ -456,7 +463,7 @@ void ShareAnySettingWindow::OnApply() {
 	obj.insert("usehttps", usehttpscheck.checkState() == Qt::CheckState::Checked);
 	//
 	auto jsdoc = QJsonDocument(obj);
-	QFile json("./setting.json");
+    QFile json("setting.json");
 	json.open(QIODevice::WriteOnly);
 	auto array = jsdoc.toJson();
 	std::cout << "JsonArray:" << array.toStdString() << std::endl;
