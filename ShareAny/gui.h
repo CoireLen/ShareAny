@@ -32,12 +32,12 @@
 class WtThread :public QThread
 {
 public:
-	WtThread(std::vector<std::pair<QString, QString>>* dataList, 
+	WtThread(std::vector<std::pair<QString, QByteArray>>* dataList,
         QString endpoint, std::string path, QString upFolder,bool useupload,bool usehttps);
 	void run();
 	void serverstop();
 private:
-	std::vector<std::pair<QString, QString>>* datalist;
+	std::vector<std::pair<QString, QByteArray>>* datalist;
 	QString endpoint;
 	std::string path;
 	QString upFolder;
@@ -48,13 +48,13 @@ private:
 
 class ShareAnyListWidget :public QListWidget {
 public:
-	ShareAnyListWidget(std::vector<std::pair<QString, QString>> *dataList);
+	ShareAnyListWidget(std::vector<std::pair<QString, QByteArray>> *dataList);
 	~ShareAnyListWidget();
 	void dragEnterEvent(QDragEnterEvent *e);
 	void dropEvent(QDropEvent *e);
 	void mouseReleaseEvent(QMouseEvent *e);
 	void deleteAll();
-	std::vector<std::pair<QString, QString>>* dataList = NULL;
+	std::vector<std::pair<QString, QByteArray>>* dataList = NULL;
 	
 private:
 	void addList(QString,QString);
@@ -65,7 +65,7 @@ private:
 };
 class ShareAnySettingWindow :public QWidget {
 public:
-    ShareAnySettingWindow(QWidget*, std::vector<std::pair<QString, QString>>* data);
+    ShareAnySettingWindow(QWidget*, std::vector<std::pair<QString, QByteArray>>* data);
 	~ShareAnySettingWindow();
 	void OnSelectFolder();
 	void OnApply();
@@ -83,7 +83,7 @@ private:
 	QPushButton uploadbutton; //ѡ���ϴ��洢·����
 	QJsonDocument settingjson;
 	QPushButton apply;
-	std::vector<std::pair<QString, QString>>* dataList;
+	std::vector<std::pair<QString, QByteArray>>* dataList;
 	WtThread * webthread;
 	QString entrypath = "";
     QStringList argv;
@@ -91,12 +91,12 @@ private:
 class ShareAnyWindow :public QWidget
 {
 public:
-    ShareAnyWindow(QWidget* parent ,std::vector<std::pair<QString, QString>> *dataList);
+    ShareAnyWindow(QWidget* parent ,std::vector<std::pair<QString, QByteArray>> *dataList);
 	~ShareAnyWindow();
 	void OnRemove();
 	void OnShowQRcode();
 	void OnShowSetting();
-	std::vector<std::pair<QString, QString>>* dataList = NULL;
+	std::vector<std::pair<QString, QByteArray>>* dataList = NULL;
 private:
 	QGridLayout layout;
 	QToolBar toolBar;

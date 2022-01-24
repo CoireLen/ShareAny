@@ -4,7 +4,7 @@
 建立web服务
 展示页面
 */
-ShareAnyWebApplication::ShareAnyWebApplication(const Wt::WEnvironment& env, std::vector<std::pair<QString, QString>>* dataList,QString upFolder,bool useupload) : WApplication(env)
+ShareAnyWebApplication::ShareAnyWebApplication(const Wt::WEnvironment& env, std::vector<std::pair<QString, QByteArray>>* dataList,QString upFolder,bool useupload) : WApplication(env)
 {
 	if (upFolder != "") {
 		this->uploadFolder = upFolder;

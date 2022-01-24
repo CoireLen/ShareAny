@@ -7,7 +7,14 @@
 - ֧���Ҽ������ı���Ϣ
 - urlɨ�����
 */
-ShareAnyWindow::ShareAnyWindow(QWidget* parent,std::vector<std::pair<QString, QString>>* data) :QWidget(parent)
+#if defined(WIN32) || defined(_WIN32) || defined(_WIN32_) || defined(WIN64) || defined(_WIN64) || defined(_WIN64_)
+#define REPLACEDATA ""
+#define USE_GBK true
+#else
+#define REPLACEDATA "/"
+#define USE_GBK false
+#endif
+ShareAnyWindow::ShareAnyWindow(QWidget* parent,std::vector<std::pair<QString, QByteArray>>* data) :QWidget(parent)
 {
 	this->dataList = data;
 	this->setGeometry(0, 0, 450, 600);
@@ -101,7 +108,7 @@ void ShareAnyListWidgetItem::setData(QString type,QString data) {
 /*
 	������LsitWeidget
 */
-ShareAnyListWidget::ShareAnyListWidget(std::vector<std::pair<QString, QString>>*data) {
+ShareAnyListWidget::ShareAnyListWidget(std::vector<std::pair<QString, QByteArray>>*data) {
 	this->dataList = data;
 	this->setViewMode(QListWidget::ListMode);
 	this->setAcceptDrops(true);
@@ -174,11 +181,7 @@ void ShareAnyListWidget::addItemToList(QString paths) {
 	}
 	for (QString path : filepaths) {
 		if (path.startsWith("file:///")) {
-			#if defined(WIN32) || defined(_WIN32) || defined(_WIN32_) || defined(WIN64) || defined(_WIN64) || defined(_WIN64_)
-			#define REPLACEDATA ""
-			#else
-			#define REPLACEDATA "/"
-			#endif
+
             path.replace("file:///", REPLACEDATA);
 			QStringList a = path.split('.');
             std::vector<std::string> list3={ "mp4" };
@@ -218,12 +221,17 @@ void ShareAnyListWidget::dropEvent(QDropEvent *e)
 		e->accept();
 	}
 }
-void ShareAnyListWidget::addList(QString type,QString data) {
-    std::cout << type.toStdString() << ":" << data.toStdString() << std::endl;
+void ShareAnyListWidget::addList(QString type, QString data) {
+	QByteArray msg;
+	if (USE_GBK) {
+		msg = QTextCodec::codecForName("GBK")->fromUnicode(data);
+	}
+	else {
+	msg = data.toUtf8();
+	}
+    std::cout << type.toStdString() << ":" << msg.toStdString() << std::endl;
 	if (this->dataList!=NULL)
-		this->dataList->push_back(std::pair<QString,QString>(type, data));
-	std::vector<std::pair<QString, QString>>vp1;
-	vp1.push_back(std::pair(type, data));
+		this->dataList->push_back(std::pair<QString, QByteArray>(type, msg));
 	auto item =new ShareAnyListWidgetItem();
 	item->setData(type, data);
 	this->addItem(item);
@@ -284,7 +292,7 @@ void strcpyns(char* des, std::string src) {
 	}
 }
 
-WtThread::WtThread(std::vector<std::pair<QString, QString>>* a, QString b ,std::string c, QString d,bool e,bool f)
+WtThread::WtThread(std::vector<std::pair<QString, QByteArray>>* a, QString b ,std::string c, QString d,bool e,bool f)
 {
     datalist = a;
     endpoint = b;
@@ -359,7 +367,7 @@ QString getRandomString(int length)
 	delete[] ch;
 	return ret;
 }
-ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::pair<QString, QString>>* data) {
+ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::pair<QString, QByteArray>>* data) {
 	this->setWindowTitle("Setting");
 	this->setLayout(&layout);
 	//HTTPS启用选项

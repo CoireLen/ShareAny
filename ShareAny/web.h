@@ -27,10 +27,10 @@
 class ShareAnyWebApplication : public Wt::WApplication
 {
 public:
-    ShareAnyWebApplication(const Wt::WEnvironment& env, std::vector<std::pair<QString, QString>>* dataList,QString upFolder,bool useupload);
+    ShareAnyWebApplication(const Wt::WEnvironment& env, std::vector<std::pair<QString, QByteArray>>* dataList,QString upFolder,bool useupload);
 private:
     QTextCodec* coder = QTextCodec::codecForName("GBK");
-    std::vector<std::pair<QString, QString>>* dataList;
+    std::vector<std::pair<QString, QByteArray>>* dataList;
     unsigned int id = 0;
     QString uploadFolder;//本地存放文件夾
     unsigned int maxfiles = 36;
