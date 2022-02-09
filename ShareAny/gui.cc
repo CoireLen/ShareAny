@@ -42,38 +42,39 @@ void ShareAnyWindow::OnRemove() {
 
 }
 void ShareAnyWindow::OnShowQRcode() {
-	QString ipAddress;
+	QStringList ipAddresslist;
 	QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
 	// use the first non-localhost IPv4 address
 	for (int i = 0; i < ipAddressesList.size(); ++i) {
 		if (ipAddressesList.at(i) != QHostAddress::LocalHost &&
 			ipAddressesList.at(i).toIPv4Address()) {
-			ipAddress = ipAddressesList.at(i).toString();
-			break;
+			ipAddresslist.push_back(ipAddressesList.at(i).toString());
 		}
 	}
 	// if we did not find one, use IPv4 localhost
-	if (ipAddress.isEmpty())
-		ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
-	std::cout << ipAddress.toStdString() << std::endl;
-	QString link;
-	if (SA_Setting->isUseHttps()) {
-		link = "https://"+ipAddress;
-		if (SA_Setting->GetEndpoint() != "443") {
-			link += ":" + SA_Setting->GetEndpoint();
+	ipAddresslist.push_back(QHostAddress(QHostAddress::LocalHost).toString());
+	QStringList LinkList;
+	for (auto ipAddress : ipAddresslist) {
+		QString link;
+		if (SA_Setting->isUseHttps()) {
+			link = "https://" + ipAddress;
+			if (SA_Setting->GetEndpoint() != "443") {
+				link += ":" + SA_Setting->GetEndpoint();
+			}
 		}
-	}
-	else {
-		link = "http://" + ipAddress;
-		if (SA_Setting->GetEndpoint() != "80") {
-			link += ":" + SA_Setting->GetEndpoint();
+		else {
+			link = "http://" + ipAddress;
+			if (SA_Setting->GetEndpoint() != "80") {
+				link += ":" + SA_Setting->GetEndpoint();
+			}
 		}
+
+		if (SA_Setting->GetEntryPath() != "") {
+			link += "/" + SA_Setting->GetEntryPath();
+		}
+		LinkList.push_back(link);
 	}
-	
-	if (SA_Setting->GetEntryPath() != "") {
-		link +="/" + SA_Setting->GetEntryPath();
-	}
-	new QRcodeWindow(this, link);
+	new QRcodeWindow(this, LinkList);
 }
 void ShareAnyWindow::OnShowSetting() {
 	SA_Setting->show();
@@ -224,7 +225,7 @@ void ShareAnyListWidget::dropEvent(QDropEvent *e)
 void ShareAnyListWidget::addList(QString type, QString data) {
 	QByteArray msg;
 	if (USE_GBK) {
-		msg = QTextCodec::codecForName("GBK")->fromUnicode(data);
+		msg = QTextCodec::codecForLocale()->fromUnicode(data);
 	}
 	else {
 	msg = data.toUtf8();
@@ -237,21 +238,23 @@ void ShareAnyListWidget::addList(QString type, QString data) {
 	this->addItem(item);
 	this->setItemWidget(item,&item->widget);
 }
-QRcodeWindow::QRcodeWindow(QWidget* parent,QString str) {
+QRcodeWindow::QRcodeWindow(QWidget* parent,QStringList str) {
 	this->setWindowTitle("QRcode Website");
 	this->resize(QSize(300, 300));
-	this->GenerateQRcode(str);
+	this->GenerateQRcode(str[0]);
 	this->setLayout(&this->layout);
-	this->layout.addWidget(&this->qrstr);
-	this->qrstr.setText(str);
+	for (auto list : str) {
+		this->v_qrstr.push_back(new QPushButton);
+		this->layout.addWidget(v_qrstr[v_qrstr.size()-1]);
+		v_qrstr[v_qrstr.size() - 1]->setText(list);
+		connect(v_qrstr[v_qrstr.size() - 1], &QPushButton::clicked, this, [this,list] {QRcodeWindow::SetClipboard(list); });
+	}
 	this->layout.addWidget(&this->qrlabel);
-	this->qrlabel.setPixmap(this->qrcodeimg);
-	connect(&this->qrstr, &QPushButton::clicked, this, &QRcodeWindow::SetClipboard);
-	//connect(&toolButton3, &QAction::triggered, this, &ShareAnyWindow::OnShowSetting);
 	this->show();
 }
-void QRcodeWindow::SetClipboard() {
-	QGuiApplication::clipboard()->setText(qrstr.text());
+void QRcodeWindow::SetClipboard(QString qrstr) {
+	QGuiApplication::clipboard()->setText(qrstr);
+	GenerateQRcode(qrstr);
 	
 }
 void QRcodeWindow::GenerateQRcode(QString tempstr)
@@ -259,8 +262,8 @@ void QRcodeWindow::GenerateQRcode(QString tempstr)
 	QRcode* qrcode; //��ά������
 	//QR_ECLEVEL_Q �ݴ��ȼ�
 	qrcode = QRcode_encodeString(tempstr.toStdString().c_str(), 2, QR_ECLEVEL_Q, QR_MODE_8, 1);
-	qint32 temp_width = this->width(); //��ά��ͼƬ�Ĵ�С
-	qint32 temp_height = this->height();
+	qint32 temp_width = 300; //��ά��ͼƬ�Ĵ�С
+	qint32 temp_height = 300;
 	qint32 qrcode_width = qrcode->width > 0 ? qrcode->width : 1;
 	double scale_x = (double)temp_width / (double)qrcode_width; //��ά��ͼƬ�����ű���
 	double scale_y = (double)temp_height / (double)qrcode_width;
@@ -285,6 +288,7 @@ void QRcodeWindow::GenerateQRcode(QString tempstr)
 		}
 	}
 	this->qrcodeimg = QPixmap::fromImage(mainimg);
+	this->qrlabel.setPixmap(this->qrcodeimg);
 }
 void strcpyns(char* des, std::string src) {
 	for (int i = 0; i < src.size(); i++) {

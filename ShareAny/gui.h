@@ -129,15 +129,15 @@ private:
 class QRcodeWindow :public QWidget
 {
 public:
-	QRcodeWindow(QWidget* parent, QString str);
+	QRcodeWindow(QWidget* parent, QStringList str);
 	//~QRcodeWindow();
 
 private:
 	void GenerateQRcode(QString);
-	void SetClipboard();
+	void SetClipboard(QString);
 	QPixmap qrcodeimg;
 	QLabel qrlabel;
-	QPushButton qrstr;
+	std::vector<QPushButton*> v_qrstr;
 	QGridLayout layout;
 };
 //
