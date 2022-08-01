@@ -185,7 +185,7 @@ void ShareAnyListWidget::addItemToList(QString paths) {
 
             path.replace("file:///", REPLACEDATA);
 			QStringList a = path.split('.');
-            std::vector<std::string> list3={ "mp4" };
+            std::vector<std::string> list3={ "mp4" ,"mov"};
             std::vector<std::string> list2={ "mp3", "aac", "flac" };
             std::vector<std::string> list1={ "jpg", "png", "gif" };
             if (FindStringLsit(list1).Find(a.at(a.length() - 1))) {
@@ -194,7 +194,7 @@ void ShareAnyListWidget::addItemToList(QString paths) {
             else if (FindStringLsit(list2).Find(a.at(a.length() - 1))) {
 				this->addList("audio", path);
 			}
-			else if (FindStringLsit({ "mp4" }).Find(a.at(a.length() - 1))) {
+			else if (FindStringLsit(list3).Find(a.at(a.length() - 1))) {
 				this->addList("video", path);
 			}
 			else {

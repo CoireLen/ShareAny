@@ -43,7 +43,8 @@ ShareAnyWebApplication::ShareAnyWebApplication(const Wt::WEnvironment& env, std:
 			auto container = root()->addNew<Wt::WContainerWidget>();
 			container->setMaximumSize(Wt::WLength("100%"), Wt::WLength("100%"));
 			auto hbox = container->setLayout(std::make_unique<Wt::WHBoxLayout>());
-			auto input1 = std::make_unique<Wt::WTextArea>(i.second.toStdString());
+			QString text=QTextCodec::codecForLocale()->toUnicode(i.second);
+			auto input1 = std::make_unique<Wt::WTextArea>(text.toUtf8().toStdString());
 			input1->setMaximumSize(Wt::WLength("70%"), Wt::WLength(""));
 			auto inputid = ("textarea" + QString::number(id++)).toStdString();
 			input1->setId(inputid);
@@ -65,28 +66,29 @@ ShareAnyWebApplication::ShareAnyWebApplication(const Wt::WEnvironment& env, std:
 			auto img=panel->setCentralWidget(std::make_unique<Wt::WImage>(link));
 			//auto img=root()->addNew<Wt::WImage>(link);
 			img->setMaximumSize(Wt::WLength("100%"), Wt::WLength("100%"));
-            img->setAlternateText(i.second.toStdString());
+			 QString text=QTextCodec::codecForLocale()->toUnicode(i.second);
+            img->setAlternateText(text.toUtf8().toStdString());
 			root()->addNew<Wt::WBreak>();
 		}
 		else if (i.first == "audio") {
 			auto container = root()->addNew<Wt::WContainerWidget>();
 			container->addStyleClass("centered-example");
-			container->setMaximumSize(Wt::WLength("100%"), Wt::WLength("100%"));
+			container->setMinimumSize(Wt::WLength("100%"),Wt::WLength("80px"));
 			auto hbox = container->setLayout(std::make_unique<Wt::WHBoxLayout>());
-
-			auto filename = i.second.split('/');
+			 QString text=QTextCodec::codecForLocale()->toUnicode(i.second);
+			auto filename = text.split('/');
             auto textResource = std::make_shared<Wt::WFileResource>(i.second.toStdString());
-			textResource->suggestFileName(filename.at(filename.length() - 1).toStdString());
+			textResource->suggestFileName(filename.at(filename.length() - 1).toUtf8().toStdString());
 			Wt::WLink link = Wt::WLink(textResource);
 			link.setTarget(Wt::LinkTarget::NewWindow);
-			auto musicfile=std::make_unique<Wt::WAnchor>(link, filename.at(filename.length() - 1).toStdString());
-			musicfile->setMaximumSize(Wt::WLength("50%"), Wt::WLength("50%"));
+			auto musicfile=std::make_unique<Wt::WAnchor>(link, filename.at(filename.length() - 1).toUtf8().toStdString());
+			//musicfile->setMaximumSize(Wt::WLength("50%"), Wt::WLength("50%"));
 			hbox->addWidget(std::move(musicfile));
 
 			auto audio= std::make_unique<Wt::WAudio>();
 			audio->addSource(Wt::WLink(link));
 			audio->setOptions(Wt::PlayerOption::Controls);
-			audio->setMaximumSize(Wt::WLength("50%"), Wt::WLength("50%"));
+			//audio->setMaximumSize(Wt::WLength("50%"), Wt::WLength("50%"));
 			audio->setAlternativeContent
 			(std::make_unique<Wt::WText>("You don't have HTML5 audio support!"));
 
@@ -95,13 +97,14 @@ ShareAnyWebApplication::ShareAnyWebApplication(const Wt::WEnvironment& env, std:
 		}
 		else if (i.first == "file") {
             auto textResource = std::make_shared<Wt::WFileResource>("plain/text",i.second.toStdString());
-			auto filename = i.second.split('/');
-			textResource->suggestFileName(filename.at(filename.length() - 1).toStdString());
+			 QString text=QTextCodec::codecForLocale()->toUnicode(i.second);
+			auto filename = text.split('/');
+			textResource->suggestFileName(filename.at(filename.length() - 1).toUtf8().toStdString());
 			Wt::WLink link = Wt::WLink(textResource);
 			link.setTarget(Wt::LinkTarget::NewWindow);
 			auto panel = root()->addNew<Wt::WPanel>();
 			panel->addStyleClass("centered-example");
-			panel->setCentralWidget(std::make_unique<Wt::WAnchor>(link, filename.at(filename.length() - 1).toStdString()));
+			panel->setCentralWidget(std::make_unique<Wt::WAnchor>(link, filename.at(filename.length() - 1).toUtf8().toStdString()));
 			//root()->addNew<Wt::WAnchor>(link,filename.at(filename.length()-1).toStdString());
 			root()->addNew<Wt::WBreak>();
 		}
@@ -110,15 +113,16 @@ ShareAnyWebApplication::ShareAnyWebApplication(const Wt::WEnvironment& env, std:
 			container->addStyleClass("centered-example");
 			container->setMaximumSize(Wt::WLength("100%"), Wt::WLength("100%"));
             auto mp4Video = std::make_shared<Wt::WFileResource>(i.second.toStdString());
-			auto filename = i.second.split('/');
-			mp4Video->suggestFileName(filename.at(filename.length() - 1).toStdString());
+			 QString text=QTextCodec::codecForLocale()->toUnicode(i.second);
+			auto filename = text.split('/');
+			mp4Video->suggestFileName(filename.at(filename.length() - 1).toUtf8().toStdString());
 			auto player = container->addNew<Wt::WVideo>();
 			player->addSource(Wt::WLink(mp4Video));
 			player->setMaximumSize(Wt::WLength("100%"), Wt::WLength("100%"));
 			container->addNew<Wt::WBreak>();
 			Wt::WLink link = Wt::WLink(mp4Video);
 			link.setTarget(Wt::LinkTarget::NewWindow);
-			container->addNew<Wt::WAnchor>(link, filename.at(filename.length() - 1).toStdString());
+			container->addNew<Wt::WAnchor>(link, filename.at(filename.length() - 1).toUtf8().toStdString());
 			root()->addNew<Wt::WBreak>();
 		}
 	}

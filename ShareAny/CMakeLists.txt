@@ -10,12 +10,12 @@ set(CMAKE_AUTORCC ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-#set (wt_DIR /home/len/Lib/wt/build/) #你编译的wt路径
+set (wt_DIR D:/Lib/Wt-4.6.1-msvs2022-Windows-x64-SDK) #你编译的wt路径
 find_package(Boost ${QT_VERSION_MAJOR} COMPONENTS thread filesystem REQUIRED)
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Widgets Network REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Widgets Network REQUIRED)
-find_package(wt CONFIG REQUIRED)
-include_directories( /home/len/Lib/wt/src/ /home/len/Lib/wt/build/)
+#find_package(wt CONFIG REQUIRED)
+include_directories( ${wt_DIR}/include)
    #target_link_libraries(main PRIVATE Wt::Wt Wt::HTTP Wt::Test)
 find_path(QRENCODE_INCLUDE_DIR NAMES qrencode.h)
 find_library(QRENCODE_LIBRARY_RELEASE qrencode)
@@ -27,7 +27,8 @@ include_directories(${QRENCODE_INCLUDE_DIR})
 add_executable(ShareAny
   main.cpp web.cc web.h gui.cc gui.h
 )
-#/home/len/Lib/wt/build/src/libwt.a /home/len/Lib/wt/build/src/libwttest.so crypto ssl
+Set_Target_Properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+target_link_directories(ShareAny PUBLIC ${wt_DIR}/lib)
 target_link_libraries(ShareAny  
 Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network  Boost::thread Boost::filesystem
-${QRENCODE_LIBRARY_RELEASE}   Wt::Wt Wt::HTTP Wt::Test) 
+${QRENCODE_LIBRARY_RELEASE}  libcrypto libcryptod libhpdf libhpdfd libssl libssld wt wtd wtdbo wtdbod wtdbomssqlserver wtdbomssqlserverd wtdbomysql wtdbomysqld wtdbopostgres wtdbopostgresd wtdbosqlite3 wtdbosqlite3d wthttp wthttpd wtisapi wtisapid wttest wttestd ) 

@@ -29,10 +29,9 @@ class ShareAnyWebApplication : public Wt::WApplication
 public:
     ShareAnyWebApplication(const Wt::WEnvironment& env, std::vector<std::pair<QString, QByteArray>>* dataList,QString upFolder,bool useupload);
 private:
-    QTextCodec* coder = QTextCodec::codecForName("GBK");
     std::vector<std::pair<QString, QByteArray>>* dataList;
     unsigned int id = 0;
-    QString uploadFolder;//±¾µØ´æ·ÅÎÄ¼þŠA
+    QString uploadFolder;//ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½A
     unsigned int maxfiles = 36;
     Wt::WText* log_;
     Wt::WFileDropWidget* drop_;
@@ -46,4 +45,4 @@ private:
     void updateProgressListener();
     void showProgress(::uint64_t current, ::uint64_t total);
 };
-//²âÊÔ
+//ï¿½ï¿½ï¿½ï¿½
