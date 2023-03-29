@@ -32,6 +32,7 @@ private:
     std::vector<std::pair<QString, QByteArray>>* dataList;
     unsigned int id = 0;
     QString uploadFolder;//���ش���ļ��A
+    QTextCodec *codec = QTextCodec::codecForLocale();
     unsigned int maxfiles = 36;
     Wt::WText* log_;
     Wt::WFileDropWidget* drop_;

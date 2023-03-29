@@ -180,9 +180,11 @@ void ShareAnyWebApplication::saveFile(Wt::WFileDropWidget::File* file)
 {
 	std::string spool = file->uploadedFile().spoolFileName();
 	std::ifstream src(spool.c_str(), std::ios::binary);
-
-	std::string saveName = uploadFolder.toStdString() + file->clientFileName();
-
+	std::string filename {this->codec->fromUnicode(file->clientFileName().c_str()).toStdString()};
+	std::string saveName = uploadFolder.toUtf8().toStdString() +filename ;
+	
+	std::cout <<"uoload file name:"<<filename<<std::endl;
+	//this->codec->fromUnicode(file->clientFileName().c_str()).toStdString()
 	std::ofstream dest(saveName.c_str(), std::ios::binary);
 	if (dest.fail()) {
 		std::cerr << "**** ERROR: The output file could not be opened"
