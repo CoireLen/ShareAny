@@ -27,7 +27,7 @@ find_library(QRENCODE_LIBRARY_RELEASE qrencode)
 include_directories(${QRENCODE_INCLUDE_DIR})
        #target_link_libraries(main PRIVATE ${QRENCODE_LIBRARIES})
 add_executable(ShareAny
-  main.cpp web.cc web.h gui.cc gui.h
+  main.cpp web.cc web.h gui.cc gui.h "ShareAny.rc" def.qrc
 )
 Set_Target_Properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
 #target_link_directories(ShareAny PUBLIC ${wt_DIR}/lib)

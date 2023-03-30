@@ -22,12 +22,15 @@
 #include "Wt/Utils.h"
 #include <QtCore/qstring.h>
 #include <QtCore/qtextcodec.h>
+#include <QSystemTrayIcon>
+#include <QClipboard>
+#include <QApplication>
 #include <fstream>
 
 class ShareAnyWebApplication : public Wt::WApplication
 {
 public:
-    ShareAnyWebApplication(const Wt::WEnvironment& env, std::vector<std::pair<QString, QByteArray>>* dataList,QString upFolder,bool useupload);
+    ShareAnyWebApplication(const Wt::WEnvironment& env,std::shared_ptr<QSystemTrayIcon> msg, std::vector<std::pair<QString, QByteArray>>* dataList,QString upFolder,bool useupload);
 private:
     std::vector<std::pair<QString, QByteArray>>* dataList;
     unsigned int id = 0;

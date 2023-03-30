@@ -27,16 +27,21 @@
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qjsonobject.h>
 #include <QtCore/QDateTime>
+#include <QSystemTrayIcon>
+#include <QMenu>
+#include <QCloseEvent>
 #include <qrencode.h>
+#include <memory>
 
 class WtThread :public QThread
 {
 public:
-	WtThread(std::vector<std::pair<QString, QByteArray>>* dataList,
+	WtThread(std::shared_ptr<QSystemTrayIcon> msg,std::vector<std::pair<QString, QByteArray>>* dataList,
         QString endpoint, std::string path, QString upFolder,bool useupload,bool usehttps);
 	void run();
 	void serverstop();
 private:
+    std::shared_ptr<QSystemTrayIcon> tray_icon;
 	std::vector<std::pair<QString, QByteArray>>* datalist;
 	QString endpoint;
 	std::string path;
@@ -65,7 +70,7 @@ private:
 };
 class ShareAnySettingWindow :public QWidget {
 public:
-    ShareAnySettingWindow(QWidget*, std::vector<std::pair<QString, QByteArray>>* data);
+    ShareAnySettingWindow(QWidget*, std::vector<std::pair<QString, QByteArray>>* data,std::shared_ptr<QSystemTrayIcon> trayicon);
 	~ShareAnySettingWindow();
 	void OnSelectFolder();
 	void OnApply();
@@ -75,18 +80,19 @@ public:
 private:
 	QGridLayout layout;
 	QLabel endpointlabel;
-	QCheckBox usehttpscheck;//����Ƿ�����https
+	QCheckBox usehttpscheck;
 	QLineEdit endpointedit;
 	QCheckBox entrycheck;
-	QCheckBox uploadcheck;//�����ļ��ϴ�����
-	QLabel    uploadpath;//�ϴ��ļ�·����ʾ
-	QPushButton uploadbutton; //ѡ���ϴ��洢·����
+	QCheckBox uploadcheck;
+	QLabel    uploadpath;
+	QPushButton uploadbutton;
 	QJsonDocument settingjson;
 	QPushButton apply;
 	std::vector<std::pair<QString, QByteArray>>* dataList;
 	WtThread * webthread;
 	QString entrypath = "";
     QStringList argv;
+	std::shared_ptr<QSystemTrayIcon> trayIcon;
 };
 class ShareAnyWindow :public QWidget
 {
@@ -102,6 +108,11 @@ private:
 	QToolBar toolBar;
 	ShareAnyListWidget *SA_listwidget;
 	ShareAnySettingWindow *SA_Setting;
+	std::shared_ptr<QSystemTrayIcon> trayIcon;
+	QAction *window_min;
+	QAction *window_max;
+	QAction *window_quit;
+	QMenu *tray_menu;
 };
 
 class FindStringLsit

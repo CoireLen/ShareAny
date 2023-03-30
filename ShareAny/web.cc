@@ -4,7 +4,7 @@
 建立web服务
 展示页面
 */
-ShareAnyWebApplication::ShareAnyWebApplication(const Wt::WEnvironment& env, std::vector<std::pair<QString, QByteArray>>* dataList,QString upFolder,bool useupload) : WApplication(env)
+ShareAnyWebApplication::ShareAnyWebApplication(const Wt::WEnvironment& env,std::shared_ptr<QSystemTrayIcon> msg, std::vector<std::pair<QString, QByteArray>>* dataList,QString upFolder,bool useupload) : WApplication(env)
 {
 	if (upFolder != "") {
 		this->uploadFolder = upFolder;
@@ -33,6 +33,21 @@ ShareAnyWebApplication::ShareAnyWebApplication(const Wt::WEnvironment& env, std:
 
 		Wt::WPushButton* abort = root()->addNew<Wt::WPushButton>("Abort current upload");
         abort->clicked().connect(this, &ShareAnyWebApplication::cancelUpload);
+	}
+	//这里文字上传区
+	if (useupload){
+		auto container = root()->addNew<Wt::WContainerWidget>();
+
+		Wt::WTextArea *ta =container->addNew<Wt::WTextArea>();
+			ta->setColumns(80);
+			ta->setRows(5);
+            ta->setText("Upload Text");
+			ta->changed().connect([=] {
+                msg->showMessage("Message",ta->text().toUTF8().c_str());
+                QClipboard *clipboard = QApplication::clipboard();
+                clipboard->setText(ta->text().toUTF8().c_str());
+			});
+		
 	}
 	//以下主体动态代码
 	

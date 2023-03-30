@@ -30,8 +30,24 @@ ShareAnyWindow::ShareAnyWindow(QWidget* parent,std::vector<std::pair<QString, QB
 	toolBar.addAction(&toolButton3);
 	connect(&toolButton3, &QAction::triggered, this, &ShareAnyWindow::OnShowSetting);
 	layout.addWidget(&toolBar);
-    this->SA_listwidget = new ShareAnyListWidget(dataList);
-    this->SA_Setting = new ShareAnySettingWindow(this,data);
+	tray_menu =new QMenu(this);
+	trayIcon= std::make_shared<QSystemTrayIcon>(this);
+	trayIcon->setToolTip("ShareAny");
+    trayIcon->setIcon(QIcon("://icon.png"));
+	window_min = new QAction("窗口最小化",this);
+    connect(window_min,&QAction::triggered,this,&ShareAnyWindow::hide);
+    window_max = new QAction("窗口最大化",this);
+    connect(window_max,&QAction::triggered,this,&ShareAnyWindow::showMaximized);
+    window_quit = new QAction("Exit",this);
+    connect(window_quit,&QAction::triggered,qApp,&QApplication::quit);
+	tray_menu->addAction(window_min);
+    tray_menu->addAction(window_max);
+    tray_menu->addSeparator(); //分割
+    tray_menu->addAction(window_quit);
+	trayIcon->setContextMenu(tray_menu);
+	trayIcon->show();
+	this->SA_listwidget = new ShareAnyListWidget(dataList);
+    this->SA_Setting = new ShareAnySettingWindow(this,data,trayIcon);
     layout.addWidget(SA_listwidget);
 	this->show();
 	
@@ -296,8 +312,9 @@ void strcpyns(char* des, std::string src) {
 	}
 }
 
-WtThread::WtThread(std::vector<std::pair<QString, QByteArray>>* a, QString b ,std::string c, QString d,bool e,bool f)
+WtThread::WtThread(std::shared_ptr<QSystemTrayIcon> msg,std::vector<std::pair<QString, QByteArray>>* a, QString b ,std::string c, QString d,bool e,bool f)
 {
+	tray_icon=msg;
     datalist = a;
     endpoint = b;
     path = c;
@@ -313,6 +330,7 @@ void WtThread::run()
 	auto dataList_ = this->datalist;
 	auto upfolder_ = upFolder;
 	auto useupload_ = useupload;
+	auto tray_icon_=tray_icon;
 	static std::vector<std::string> startData;
 	if (usehttps)
 	{
@@ -341,8 +359,8 @@ void WtThread::run()
 	}
 	server=new Wt::WServer(startData.size(), a, WTHTTP_CONFIGURATION);
 	server->addEntryPoint(Wt::EntryPointType::Application,
-		[dataList_,upfolder_, useupload_](const Wt::WEnvironment& env) {
-			return std::make_unique<ShareAnyWebApplication>(env, dataList_, upfolder_, useupload_); },
+		[dataList_,upfolder_, useupload_,tray_icon_](const Wt::WEnvironment& env) {
+			return std::make_unique<ShareAnyWebApplication>(env,tray_icon_, dataList_, upfolder_, useupload_); },
 		path,
 				std::string(""));
 	server->run();
@@ -371,7 +389,8 @@ QString getRandomString(int length)
 	delete[] ch;
 	return ret;
 }
-ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::pair<QString, QByteArray>>* data) {
+ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::pair<QString, QByteArray>>* data,std::shared_ptr<QSystemTrayIcon> trayicon) {
+	this->trayIcon=trayicon;
 	this->setWindowTitle("Setting");
 	this->setLayout(&layout);
 	//HTTPS启用选项
@@ -399,7 +418,7 @@ ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::p
 	apply.setText("Apply");
 	connect(&apply, &QPushButton::clicked, this, &ShareAnySettingWindow::OnApply);
 	layout.addWidget(&apply);
-	//����Ŷ�ȡsetting.json�Ĵ���
+	//从setting.json读取配置
     QFile json("setting.json");
 	json.open(QIODevice::ReadWrite);
 	auto jsfiledata = json.readAll();
@@ -446,7 +465,7 @@ ShareAnySettingWindow::ShareAnySettingWindow(QWidget* parent, std::vector<std::p
 	}
 	dataList = data;
 
-    webthread = new WtThread(data, endpointedit.text(),entrypath.toStdString(),uploadfolder, useupload,usehttps);
+    webthread = new WtThread(this->trayIcon,data, endpointedit.text(),entrypath.toStdString(),uploadfolder, useupload,usehttps);
     webthread->start();
 }
 ShareAnySettingWindow::~ShareAnySettingWindow() {
@@ -462,14 +481,13 @@ void ShareAnySettingWindow::OnApply() {
 	else {
 		entrypath = "";
 	}
-	webthread = new WtThread(this->dataList, endpointedit.text(), entrypath.toStdString(),
+	webthread = new WtThread(this->trayIcon,this->dataList, endpointedit.text(), entrypath.toStdString(),
         uploadpath.text(),uploadcheck.checkState()== Qt::CheckState::Checked, usehttpscheck.checkState() == Qt::CheckState::Checked);
 	webthread->start();
-	//������д��setting.json
+	//将更改保存到setting.json
 	QJsonObject obj;
-	//��������
-	obj.insert("endpoint", endpointedit.text());//�˿�
-	obj.insert("entrypath", entrycheck.checkState()== Qt::CheckState::Checked);//�����������
+	obj.insert("endpoint", endpointedit.text());
+	obj.insert("entrypath", entrycheck.checkState()== Qt::CheckState::Checked);
 	obj.insert("useupload", uploadcheck.checkState() == Qt::CheckState::Checked);
 	obj.insert("uploadpath", uploadpath.text());
 	obj.insert("usehttps", usehttpscheck.checkState() == Qt::CheckState::Checked);
